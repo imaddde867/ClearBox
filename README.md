@@ -43,7 +43,7 @@ A scalable, secure, and GDPR-compliant chat application supporting **1:1 messagi
 ## 📐 Architecture Diagram
 
 ![Architecture Diagram](docs/Plan_Diagram.drawio.png)  
-*For a detailed diagram, see [ARCHITECTURE.md](./docs/ARCHITECTURE.md).*
+*For a detailed diagram, see [ARCHITECTURE.md](docs/architecture.md)*
 
 ---
 
@@ -176,15 +176,6 @@ Example AWS setup:
 ```bash
 terraform apply  # Infrastructure as Code (IaC)
 ```
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository.  
-2. Create a branch: `git checkout -b feature/your-feature`.  
-3. Follow [coding guidelines](./docs/CODING_STANDARDS.md).  
-4. Submit a PR with tests and documentation.  
 
 ---
 
