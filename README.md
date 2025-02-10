@@ -39,7 +39,7 @@ A scalable, secure, and GDPR-compliant chat application supporting **1:1 messagi
 
 ## 📐 Architecture Diagram
 
-![Architecture Diagram](./docs/architecture.png)  
+![Architecture Diagram](docs/Plan_Diagram.drawio.png)  
 *For a detailed diagram, see [ARCHITECTURE.md](./docs/ARCHITECTURE.md).*
 
 ---
