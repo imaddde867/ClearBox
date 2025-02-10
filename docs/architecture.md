@@ -11,8 +11,4 @@ The application consists of a client-side UI, a backend server providing REST AP
 - **Cloud Infrastructure:** Deployed on AWS/GCP/Azure with container orchestration.
 
 ## Diagram
-*Insert your architecture diagram here.*  
-You can create the diagram using tools like [draw.io](https://app.diagrams.net/) or [Lucidchart](https://www.lucidchart.com), export it as an image, and then embed it using Markdown:
-
-```markdown
-![Architecture Diagram](docs/Plan_Diagram.drawio.png)
+![Architecture Diagram](Plan_Diagram.drawio.png)
