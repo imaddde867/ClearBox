@@ -11,4 +11,4 @@ The application consists of a client-side UI, a backend server providing REST AP
 - **Cloud Infrastructure:** Deployed on AWS/GCP/Azure with container orchestration.
 
 ## Diagram
-![Architecture Diagram](docs/Plan_Diagram.drawio.png)
+![Architecture Diagram](Plan_Diagram.drawio.png)
