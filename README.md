@@ -2,6 +2,7 @@
 <p align="center">
   <img src="docs/Logo/Logo_white.png" alt="ClearBox Logo" width="25%"/>
 </p>
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://python.org)
 [![RabbitMQ](https://img.shields.io/badge/Message%20Broker-RabbitMQ-FF6600)](https://www.rabbitmq.com/)
