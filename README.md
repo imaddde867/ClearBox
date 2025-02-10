@@ -1,4 +1,4 @@
-##ClearBox : A Real-Time Cloud Messaging System
+## ClearBox : A Real-Time Cloud Messaging System
 
 ## Overview
 This project is a cloud-based real-time messaging system that enables users to send and receive messages asynchronously, even when offline. The system supports individual and group messaging while ensuring security, privacy, scalability, and GDPR compliance.
