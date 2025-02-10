@@ -1,9 +1,10 @@
 # ClearBox: GDPR-Compliant Secure Messaging Platform
 ![ClearBox Logo](docs/Logo/Logo_white.png)
 
-[![License: MIT](https://opensource.org/licenses/MIT)]
-[![Python](https://python.org)]
-[![RabbitMQ](https://www.rabbitmq.com/)]
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://python.org)
+[![RabbitMQ](https://img.shields.io/badge/Message%20Broker-RabbitMQ-FF6600)](https://www.rabbitmq.com/)
+
 
 A scalable, secure, and GDPR-compliant chat application supporting **1:1 messaging**, **group chats**, and **offline message delivery**. Built with message queues, end-to-end encryption, and real-time communication.
 
