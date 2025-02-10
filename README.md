@@ -1,4 +1,5 @@
 # ClearBox: GDPR-Compliant Secure Messaging Platform
+![ClearBox](docs/Logo/Logo_white.png)
 
 [![License: MIT](https://opensource.org/licenses/MIT)]
 [![Python](https://python.org)]
