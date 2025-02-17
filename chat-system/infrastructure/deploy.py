@@ -15,7 +15,7 @@ class ChatSystemStack(core.Stack):
 
         # Create VPC for RDS
         vpc = ec2.Vpc(
-            self, "ChatSystemVPC",
+            self, "ChatSystemVPC", 
             max_azs=2,  # We'll use 2 availability zones for high availability
             nat_gateways=1  # Adding a NAT Gateway for private subnets
         )
@@ -33,7 +33,17 @@ class ChatSystemStack(core.Stack):
             description="Allow PostgreSQL inbound from VPC"
         )
 
-        #setting up the database 
+        # Create database credentials and store in Secrets Manager
+        db_credentials = secretsmanager.Secret(
+            self, "DatabaseCredentials",
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                secret_string_template='{"username": "admin"}',
+                generate_string_key="password",
+                exclude_characters='/@"\ '
+            )
+        )
+
+        # Create the database instance with credentials
         database = rds.DatabaseInstance(
             self, "ChatDatabase",
             engine=rds.DatabaseInstanceEngine.postgres(
@@ -43,11 +53,35 @@ class ChatSystemStack(core.Stack):
                 ec2.InstanceClass.BURSTABLE3,
                 ec2.InstanceSize.MEDIUM,
             ),
-            vpc=vpc,  # Added missing VPC configuration
-            security_groups=[db_security_group],  # Added security group configuration
-            multi_az=True,  # Enable high availability by creating a standby copy in another AZ for failover
-            allocated_storage=10, #starts with 10 Gb of storage
-            max_allocated_storage=20,  # Enable storage autoscaling up to 20 Gbs if needed
+            vpc=vpc,
+            security_groups=[db_security_group],
+            multi_az=True,  # Enable high availability
+            allocated_storage=10,  # Starts with 10 GB of storage
+            max_allocated_storage=20,  # Enable storage autoscaling up to 20 GB
+            database_name="chatdb",
+            credentials=rds.Credentials.from_secret(db_credentials),
+            port=5432
+        )
+
+        # Output the database endpoint
+        core.CfnOutput(self, "DatabaseEndpoint",
+            value=database.instance_endpoint.hostname,
+            description="Database endpoint"
+        )
+        
+        broker_credentials = secretsmanager.Secret(
+            self, "BrokerCredentials",
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                secret_string_template='{"username": "admin"}',
+                generate_string_key="password",
+                exclude_characters='/@"\ '
+            )
+        )    
+
+        # Output the secret ARN (for retrieving credentials)
+        core.CfnOutput(self, "DatabaseCredentialsArn",
+            value=db_credentials.secret_arn,
+            description="Database credentials secret ARN"
         )
 
         # Creating the Amazon MQ Broker using RabbitMQ
@@ -63,7 +97,7 @@ class ChatSystemStack(core.Stack):
                 "consoleAccess": True,
                 "username": "admin",
                 # Password stored in Secrets Manager instead of hardcoding
-                "password": secretsmanager.Secret(self, "BrokerPassword").secret_value
+                "password": broker_credentials.secret_value_from_json("password").unsafe_unwrap()
             }],
             logs={"general": True},
             subnetIds=vpc.select_subnets(subnet_type=ec2.SubnetType.PUBLIC).subnet_ids,
@@ -73,4 +107,9 @@ class ChatSystemStack(core.Stack):
         core.CfnOutput(self, "BrokerEndpoint",
             value=broker.attr_amqp_endpoints[0],
             description="RabbitMQ broker endpoint"
+        )
+        # output for the broker credentials ARN
+        core.CfnOutput(self, "BrokerCredentialsArn",
+            value=broker_credentials.secret_arn,
+            description="Broker credentials secret ARN"
         )
