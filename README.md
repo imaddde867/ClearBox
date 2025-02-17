@@ -52,7 +52,7 @@ A scalable, secure, and GDPR-compliant chat application supporting **1:1 messagi
 ### Prerequisites
 - Python 3.10+ / Node.js 18+
 - Docker (for RabbitMQ, Redis, PostgreSQL)
-- `pip` or `npm`
+- `pip`
 
 ### Setup
 
