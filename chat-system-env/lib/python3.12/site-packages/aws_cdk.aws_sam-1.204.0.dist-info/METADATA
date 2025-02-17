@@ -1,0 +1,70 @@
+Metadata-Version: 2.1
+Name: aws-cdk.aws-sam
+Version: 1.204.0
+Summary: The CDK Construct Library for the AWS Serverless Application Model (SAM) resources
+Home-page: https://github.com/aws/aws-cdk
+Author: Amazon Web Services
+License: Apache-2.0
+Project-URL: Source, https://github.com/aws/aws-cdk.git
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: JavaScript
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Typing :: Typed
+Classifier: Development Status :: 7 - Inactive
+Classifier: License :: OSI Approved
+Classifier: Framework :: AWS CDK
+Classifier: Framework :: AWS CDK :: 1
+Requires-Python: ~=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+License-File: NOTICE
+Requires-Dist: aws-cdk.core (==1.204.0)
+Requires-Dist: constructs (<4.0.0,>=3.3.69)
+Requires-Dist: jsii (<2.0.0,>=1.84.0)
+Requires-Dist: publication (>=0.0.3)
+Requires-Dist: typeguard (~=2.13.3)
+
+# AWS Serverless Application Model Construct Library
+
+<!--BEGIN STABILITY BANNER-->---
+
+
+![End-of-Support](https://img.shields.io/badge/End--of--Support-critical.svg?style=for-the-badge)
+
+> AWS CDK v1 has reached End-of-Support on 2023-06-01.
+> This package is no longer being updated, and users should migrate to AWS CDK v2.
+>
+> For more information on how to migrate, see the [*Migrating to AWS CDK v2* guide](https://docs.aws.amazon.com/cdk/v2/guide/migrating-v2.html).
+
+---
+<!--END STABILITY BANNER-->
+
+This module is part of the [AWS Cloud Development Kit](https://github.com/aws/aws-cdk) project.
+
+```python
+import aws_cdk.aws_sam as serverless
+```
+
+<!--BEGIN CFNONLY DISCLAIMER-->
+
+There are no official hand-written ([L2](https://docs.aws.amazon.com/cdk/latest/guide/constructs.html#constructs_lib)) constructs for this service yet. Here are some suggestions on how to proceed:
+
+* Search [Construct Hub for Serverless construct libraries](https://constructs.dev/search?q=serverless)
+* Use the automatically generated [L1](https://docs.aws.amazon.com/cdk/latest/guide/constructs.html#constructs_l1_using) constructs, in the same way you would use [the CloudFormation AWS::Serverless resources](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_Serverless.html) directly.
+
+<!--BEGIN CFNONLY DISCLAIMER-->
+
+There are no hand-written ([L2](https://docs.aws.amazon.com/cdk/latest/guide/constructs.html#constructs_lib)) constructs for this service yet.
+However, you can still use the automatically generated [L1](https://docs.aws.amazon.com/cdk/latest/guide/constructs.html#constructs_l1_using) constructs, and use this service exactly as you would using CloudFormation directly.
+
+For more information on the resources and properties available for this service, see the [CloudFormation documentation for AWS::Serverless](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/AWS_Serverless.html).
+
+(Read the [CDK Contributing Guide](https://github.com/aws/aws-cdk/blob/master/CONTRIBUTING.md) and submit an RFC if you are interested in contributing to this construct library.)
+
+<!--END CFNONLY DISCLAIMER-->
