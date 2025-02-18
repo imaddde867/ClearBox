@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="sidebar">
+        <div class="user-info">
+            <span>{{ current_user.username }}</span>
+        </div>
+        <div class="chat-list">
+            <!-- Chat list will be populated dynamically -->
+        </div>
+    </div>
+    <div class="chat-main">
+        <div class="chat-header">
+            <span class="current-chat-name"></span>
+        </div>
+        <div class="messages-container">
+            <!-- Messages will be populated dynamically -->
+        </div>
+        <div class="message-input">
+            <input type="text" id="message-text" placeholder="Type a message...">
+            <button id="send-message">Send</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
