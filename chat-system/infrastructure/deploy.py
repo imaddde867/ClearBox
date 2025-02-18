@@ -1,11 +1,11 @@
 from aws_cdk import (
     Stack,
     aws_amazonmq as mq,
-    aws_ec2 as ec2, # For creating our Virtual Private Cloud (VPC) where our database will live
-    aws_rds as rds, # For setting up our PostgreSQL database
-    aws_iot as iot, # For our MQTT messaging system
-    aws_cognito as cognito, # For user authentication
-    aws_secretsmanager as secretsmanager, # For securely storing database credentials
+    aws_ec2 as ec2,  # For creating our Virtual Private Cloud (VPC) where our database will live
+    aws_rds as rds,  # For setting up our PostgreSQL database
+    aws_iot as iot,  # For our MQTT messaging system
+    aws_cognito as cognito,  # For user authentication
+    aws_secretsmanager as secretsmanager,  # For securely storing database credentials
     core
 )
 
@@ -15,16 +15,16 @@ class ChatSystemStack(core.Stack):
 
         # Create VPC for RDS
         vpc = ec2.Vpc(
-            self, "ChatSystemVPC", 
+            self, "ChatSystemVPC",
             max_azs=2,  # We'll use 2 availability zones for high availability
-            nat_gateways=1  # Adding a NAT Gateway for private subnets
+            nat_gateways=1,  # Adding a NAT Gateway for private subnets
         )
 
         db_security_group = ec2.SecurityGroup(
             self, "DatabaseSecurityGroup",
             vpc=vpc,
             description="Security group for Chat System database",
-            allow_all_outbound=True # Our database can send traffic anywhere 
+            allow_all_outbound=False  # More secure: only allow necessary outbound traffic
         )
 
         db_security_group.add_ingress_rule(
@@ -37,9 +37,9 @@ class ChatSystemStack(core.Stack):
         db_credentials = secretsmanager.Secret(
             self, "DatabaseCredentials",
             generate_secret_string=secretsmanager.SecretStringGenerator(
-                secret_string_template='{"username": "admin"}',
+                secret_string_template='{"username": "admin", "password": "${password}"}',
                 generate_string_key="password",
-                exclude_characters='/@"\ '
+                exclude_characters=r'/@"\ '
             )
         )
 
@@ -51,14 +51,14 @@ class ChatSystemStack(core.Stack):
             ),
             instance_type=ec2.InstanceType.of(
                 ec2.InstanceClass.BURSTABLE3,
-                ec2.InstanceSize.MEDIUM,
+                ec2.InstanceSize.MEDIUM
             ),
             vpc=vpc,
             security_groups=[db_security_group],
             multi_az=True,  # Enable high availability
             allocated_storage=10,  # Starts with 10 GB of storage
             max_allocated_storage=20,  # Enable storage autoscaling up to 20 GB
-            database_name="chatdb",
+            database_name="ChatDatabase",
             credentials=rds.Credentials.from_secret(db_credentials),
             port=5432
         )
@@ -68,15 +68,15 @@ class ChatSystemStack(core.Stack):
             value=database.instance_endpoint.hostname,
             description="Database endpoint"
         )
-        
+
         broker_credentials = secretsmanager.Secret(
             self, "BrokerCredentials",
             generate_secret_string=secretsmanager.SecretStringGenerator(
-                secret_string_template='{"username": "admin"}',
+                secret_string_template='{"username": "admin", "password": "${password}"}',
                 generate_string_key="password",
-                exclude_characters='/@"\ '
+                exclude_characters=r'/@"\ '
             )
-        )    
+        )
 
         # Output the secret ARN (for retrieving credentials)
         core.CfnOutput(self, "DatabaseCredentialsArn",
@@ -90,13 +90,12 @@ class ChatSystemStack(core.Stack):
             broker_name="ClearBox",
             deployment_mode="SINGLE_INSTANCE",
             engine_type="RABBITMQ",
-            engine_version="3.13",
+            engine_version="3.13.7",
             host_instance_type="mq.t3.micro",
             publicly_accessible=True,
             users=[{
                 "consoleAccess": True,
                 "username": "admin",
-                # Password stored in Secrets Manager instead of hardcoding
                 "password": broker_credentials.secret_value_from_json("password").unsafe_unwrap()
             }],
             logs={"general": True},
