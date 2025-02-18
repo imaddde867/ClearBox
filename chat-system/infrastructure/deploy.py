@@ -1,5 +1,4 @@
 from aws_cdk import (
-    Stack,
     aws_amazonmq as mq,
     aws_ec2 as ec2,  # For creating our Virtual Private Cloud (VPC) where our database will live
     aws_rds as rds,  # For setting up our PostgreSQL database
@@ -8,6 +7,7 @@ from aws_cdk import (
     aws_secretsmanager as secretsmanager,  # For securely storing database credentials
     core
 )
+from aws_cdk.core import Stack
 
 class ChatSystemStack(core.Stack):
     def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
