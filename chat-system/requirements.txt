@@ -1,0 +1,10 @@
+Flask==2.0.3
+psycopg2-binary==2.9.1
+pika==1.2.0
+aws-cdk.core==1.130.0
+aws-cdk.aws-amazonmq==1.130.0
+aws-cdk.aws-ec2==1.130.0
+aws-cdk.aws-rds==1.130.0
+aws-cdk.aws-iot==1.130.0
+aws-cdk.aws-cognito==1.130.0
+aws-cdk.aws-secretsmanager==1.130.0

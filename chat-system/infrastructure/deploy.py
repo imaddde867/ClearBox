@@ -1,9 +1,9 @@
 from aws_cdk import (
     aws_amazonmq as mq,
-    aws_ec2 as ec2,  # For creating our Virtual Private Cloud (VPC) where our database will live
-    aws_rds as rds,  # For setting up our PostgreSQL database
-    aws_iot as iot,  # For our MQTT messaging system
-    aws_cognito as cognito,  # For user authentication
+    aws_ec2 as ec2,                        # For creating our Virtual Private Cloud (VPC) where our database will live
+    aws_rds as rds,                        # For setting up our PostgreSQL database
+    aws_iot as iot,                        # For our MQTT messaging system
+    aws_cognito as cognito,                # For user authentication
     aws_secretsmanager as secretsmanager,  # For securely storing database credentials
     core
 )
