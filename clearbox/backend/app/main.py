@@ -10,7 +10,7 @@ from .models import User, Contact, ContactRequest, Message, Group, GroupMember
 from .mqtt_client import setup_mqtt_client
 
 # Import routers
-from .routes import auth, users, contacts, messages, notifications
+from .routes import auth, users, contacts, messages, notifications, websockets
 
 # Load environment variables
 load_dotenv()
@@ -32,7 +32,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend server origin
+    allow_origins=["*"],  # Allow all origins in development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -44,12 +44,15 @@ try:
 except Exception as e:
     logger.error(f"Failed to set up MQTT client: {e}")
 
-# Include routers
+# Include routers with prefixes
 app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(contacts.router, prefix="/api")
 app.include_router(messages.router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
+
+# Include WebSocket router - WebSockets don't use /api prefix
+app.include_router(websockets.router)
 
 @app.get("/api")
 def root():

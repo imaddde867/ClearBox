@@ -486,12 +486,13 @@ const Dashboard = () => {
     contacts, 
     contactRequests, 
     searchResults, 
-    loading,
+    loading: contactsLoading, 
     error: contactsError,
     searchUsers,
     sendContactRequest,
     acceptContactRequest,
     rejectContactRequest,
+    searchLoading,
     refreshContacts,
     refreshRequests,
     refreshSentRequests
@@ -504,7 +505,8 @@ const Dashboard = () => {
     error: messagesError,
     setActiveChat,
     sendMessage,
-    refreshMessages
+    refreshMessages,
+    isConnected
   } = useMessages();
   
   const {
@@ -584,12 +586,42 @@ const Dashboard = () => {
     return `${formattedHours}:${minutes} ${ampm}`;
   };
 
-  // Scroll to bottom of messages
-  const scrollToBottom = () => {
+  // Create a ref for the scrollToBottom function to ensure it's accessible in all effects
+  const scrollToBottomRef = useRef(() => {
     if (messageListRef.current) {
       messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
     }
+  });
+
+  // Scroll to bottom of messages
+  const scrollToBottom = () => {
+    scrollToBottomRef.current();
   };
+
+  // Add a specific handler for incoming messages to scroll to bottom immediately
+  useEffect(() => {
+    // Create a handler specifically for real-time messages
+    const handleIncomingMessage = (event) => {
+      const data = event.detail;
+      
+      // Only process actual messages (not other WebSocket events)
+      if (data.type === 'message') {
+        // Wait a small amount of time for the message to be processed
+        setTimeout(() => {
+          // Scroll to bottom immediately for new messages
+          scrollToBottomRef.current();
+        }, 50);
+      }
+    };
+    
+    // Add event listener
+    window.addEventListener('ws-message', handleIncomingMessage);
+    
+    // Cleanup on unmount
+    return () => {
+      window.removeEventListener('ws-message', handleIncomingMessage);
+    };
+  }, []);
 
   // Handle emoji picker
   useEffect(() => {
@@ -629,7 +661,7 @@ const Dashboard = () => {
         
         // People category
         { emoji: '👋', name: 'Waving Hand', category: 'people' },
-        { emoji: '��', name: 'Thumbs Up', category: 'people' },
+        { emoji: '👍', name: 'Thumbs Up', category: 'people' },
         { emoji: '🙏', name: 'Folded Hands', category: 'people' },
         { emoji: '🤝', name: 'Handshake', category: 'people' },
         
@@ -748,7 +780,28 @@ const Dashboard = () => {
 
   // Use useMemo to memoize activeChatMessages to prevent it from changing on every render
   const activeChatMessages = useMemo(() => {
-    return activeChat ? (messages[activeChat] || []) : [];
+    if (!activeChat) return [];
+    
+    const chatMessages = messages[activeChat] || [];
+    
+    // CRITICAL: Sort messages by timestamp to ensure consistent chronological order
+    // This ensures messages are ALWAYS displayed in the exact order they were sent/received
+    // regardless of what order they arrived in via websockets or API
+    return [...chatMessages].sort((a, b) => {
+      // Parse dates consistently to avoid timezone or format issues
+      const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
+      const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
+      
+      // If timestamps are exactly the same (rare), use message ID as secondary sort
+      if (timeA === timeB) {
+        // Temp IDs always go last if timestamps match
+        if (a.id.toString().startsWith('temp-')) return 1;
+        if (b.id.toString().startsWith('temp-')) return -1;
+        return a.id.localeCompare(b.id);
+      }
+      
+      return timeA - timeB;
+    });
   }, [activeChat, messages]);
   
   // Handle sending a message
@@ -915,18 +968,18 @@ const Dashboard = () => {
   // Add a useEffect to ensure we track when contacts finish loading
   useEffect(() => {
     // If we have contacts data and the loading is complete, mark data as loaded
-    if (contacts?.length > 0 && !loading.contacts) {
+    if (contacts?.length > 0 && !contactsLoading) {
       initialDataLoadedRef.current = true;
     }
-  }, [contacts, loading.contacts]);
+  }, [contacts, contactsLoading]);
 
   // Add a helper function to determine if contacts data is actually in a loading state
   const isContactsLoading = () => {
     // Consider contacts as loading only if:
-    // 1. loading.contacts is true
-    // 2. AND we haven't successfully loaded contacts before
-    // 3. AND contacts list is empty
-    return loading.contacts && !initialDataLoadedRef.current && contacts.length === 0;
+    // 1. contactsLoading is true
+    // 2. We haven't loaded data yet (initialDataLoadedRef.current is false)
+    // 3. We don't have any contacts data yet (contacts.length === 0)
+    return contactsLoading && !initialDataLoadedRef.current && contacts.length === 0;
   };
 
   // Dashboard initialization and auth verification
@@ -990,17 +1043,20 @@ const Dashboard = () => {
 
   // Update the authentication verification useEffect to include missing dependencies
   useEffect(() => {
-    if (activeChat) {
-      const token = localStorage.getItem('token'); // Fix: Use 'token' instead of 'clearboxToken'
-      if (!token || !currentUser) {
-        console.error("Cannot load messages: Not properly authenticated");
-        setConnectionError(true);
-        return;
-      }
-      
-      refreshMessages(activeChat);
+    if (!activeChat || !currentUser) {
+      return;
     }
-  }, [activeChat, currentUser, refreshMessages, setConnectionError]);
+    
+    // Check for properly authenticated
+    const token = localStorage.getItem('token');
+    if (!token || !currentUser) {
+      console.error("Cannot load messages: Not properly authenticated");
+      setConnectionError(true);
+      return;
+    }
+    
+    refreshMessages(activeChat);
+  }, [activeChat, currentUser, setConnectionError]);
 
   // Add notification display rendering if it doesn't exist
   const renderNotification = () => {
@@ -1025,11 +1081,11 @@ const Dashboard = () => {
 
   // When activeChat changes, ensure we load messages and mark them as read
   useEffect(() => {
-    if (activeChat && refreshMessages) {
+    if (activeChat) {
       console.log(`Loading messages for active chat: ${activeChat}`);
       refreshMessages(activeChat, false); // Not silent, show loading indicator
     }
-  }, [activeChat, refreshMessages]);
+  }, [activeChat]);
 
   // Add a new state for delete account confirmation
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -1177,6 +1233,47 @@ const Dashboard = () => {
       setTimeout(scrollToBottom, 100); // slight delay to ensure rendering completes
     }
   }, [activeChat, activeChatMessages]);
+
+  // Add a useEffect to scroll to bottom whenever messages change
+  useEffect(() => {
+    // Only scroll if we have messages and are viewing the active chat
+    if (activeChatMessages.length > 0) {
+      scrollToBottomRef.current();
+    }
+  }, [activeChatMessages]);
+
+  // Handle user online status through WebSocket
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    // WebSocket connection is handled in MessagesContext
+    // Here we just listen for and process presence updates
+    const handleWebSocketMessage = (event) => {
+      try {
+        // Access data from the CustomEvent's detail property
+        const data = event.detail;
+        
+        // Handle presence updates
+        if (data.type === 'presence') {
+          const { userId, online } = data;
+          setOnlineStatus(prev => ({
+            ...prev,
+            [userId]: online
+          }));
+        }
+      } catch (error) {
+        console.error('Error processing presence data:', error);
+      }
+    };
+    
+    // Listen for messages from the WebSocket connection in MessagesContext
+    window.addEventListener('ws-message', handleWebSocketMessage);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('ws-message', handleWebSocketMessage);
+    };
+  }, [currentUser]);
 
   return (
     <div className="dashboard-container">
@@ -1399,7 +1496,9 @@ const Dashboard = () => {
                             {activeChatMessages
                               .slice() // Create a copy to avoid mutating the original array
                               .sort((a, b) => { 
-                                // Sort by timestamp, oldest first (newer messages at bottom)
+                                // CRITICAL: Sort by timestamp, oldest first (newer messages at bottom)
+                                // This sort is the final safeguard to ensure messages are always displayed chronologically
+                                // Messages should already be sorted in MessagesContext but this ensures proper display order
                                 const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
                                 const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
                                 return timeA - timeB;
@@ -1619,7 +1718,7 @@ const Dashboard = () => {
                   )}
                   
                   <div className="search-results-container">
-                    {loading.search ? (
+                    {searchLoading ? (
                       <div className="loading-indicator">Searching...</div>
                     ) : filteredSearchResults && filteredSearchResults.length > 0 ? (
                       <div className="search-results-list">
@@ -1632,7 +1731,7 @@ const Dashboard = () => {
                             <button 
                               className="button-small"
                               onClick={() => handleSendContactRequest(user.id)}
-                              disabled={loading.contactRequest}
+                              disabled={false}
                             >
                               Add Contact
                             </button>
