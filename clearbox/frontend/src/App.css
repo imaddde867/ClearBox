@@ -31,6 +31,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
 }
 
 /* Main app container */
@@ -3695,6 +3696,8 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   overflow-y: auto;
+  scroll-behavior: auto;
+  scroll-padding-top: 0;
 }
 
 .privacy-policy-content {
@@ -4081,6 +4084,8 @@ button:disabled {
   justify-content: center;
   padding: 40px 20px;
   font-family: var(--font-family);
+  scroll-behavior: auto;
+  scroll-padding-top: 0;
 }
 
 .terms-content {
@@ -4200,6 +4205,8 @@ button:disabled {
   background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
   color: #f0f0f0;
   font-family: var(--font-family);
+  scroll-behavior: auto;
+  scroll-padding-top: 0;
 }
 
 .about-header {
@@ -5729,6 +5736,8 @@ textarea:focus {
   background: linear-gradient(135deg, rgba(15, 15, 26, 0.98) 0%, rgba(26, 26, 46, 0.95) 100%);
   color: var(--text-primary);
   font-family: var(--font-family);
+  scroll-behavior: auto;
+  scroll-padding-top: 0;
 }
 
 .privacy-policy-content,

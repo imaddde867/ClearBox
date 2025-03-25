@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useContext, useMemo, useCallback } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -6,6 +6,7 @@ import {
   Navigate,
   Link,
   NavLink,
+  useLocation
 } from 'react-router-dom';
 import EmojiPicker from 'emoji-picker-react';
 import { useAuth } from './contexts/AuthContext';
@@ -16,6 +17,20 @@ import { useGroups } from './contexts/GroupsContext';
 import GroupChat from './components/GroupChat';
 import api from './services/api';
 import './App.css';
+
+// ScrollToTop component to fix scroll position on page navigation
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  
+  useEffect(() => {
+    // Only scroll to top for static pages
+    if (['/about', '/contact', '/privacy-policy', '/terms'].includes(pathname)) {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname]);
+
+  return null;
+}
 
 // MessageItem component with better content handling
 const MessageItem = ({ message, currentUserId, formatTime }) => {
@@ -2822,6 +2837,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="app">
         <Routes>
           <Route path="/" element={currentUser ? <Navigate to="/dashboard" /> : <LandingPage />} />
