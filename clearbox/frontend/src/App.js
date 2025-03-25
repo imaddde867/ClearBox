@@ -1645,11 +1645,6 @@ const Dashboard = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="chat-actions">
-                          <button className="icon-button" title="More options">
-                            ⋮
-                          </button>
-                        </div>
                       </div>
 
                       <div className="messages-container">
