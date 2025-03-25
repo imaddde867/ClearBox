@@ -6,6 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ContactsProvider } from './contexts/ContactsContext';
 import { MessagesProvider } from './contexts/MessagesContext';
 import { NotificationsProvider } from './contexts/NotificationsContext';
+import { GroupsProvider } from './contexts/GroupsContext';
 import { testApiConnection } from './utils/testApi';
 
 // Make test function available for debugging
@@ -17,9 +18,11 @@ root.render(
     <AuthProvider>
       <NotificationsProvider>
         <ContactsProvider>
-          <MessagesProvider>
-            <App />
-          </MessagesProvider>
+          <GroupsProvider>
+            <MessagesProvider>
+              <App />
+            </MessagesProvider>
+          </GroupsProvider>
         </ContactsProvider>
       </NotificationsProvider>
     </AuthProvider>

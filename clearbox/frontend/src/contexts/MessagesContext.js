@@ -257,8 +257,51 @@ export function MessagesProvider({ children }) {
   const handleIncomingGroupMessage = (data) => {
     const { messageId, senderId, groupId, content, timestamp } = data;
 
-    // We don't currently have group chat in state, but could implement it
-    console.log(`Group message received from ${senderId} to group ${groupId}`);
+    // Add to state - store messages by groupId with "group-" prefix to distinguish from user chats
+    setMessages(prev => {
+      const chatKey = `group-${groupId}`;
+      const existingMessages = prev[chatKey] || [];
+
+      // Check if we already have this message (avoid duplicates)
+      const isDuplicate = existingMessages.some(msg => 
+        msg.id === messageId || 
+        (msg.content === content && 
+         msg.sender_id === senderId &&
+         new Date(msg.timestamp || msg.created_at).getTime() === new Date(timestamp).getTime())
+      );
+
+      if (isDuplicate) {
+        return prev;
+      }
+
+      // Add the new message
+      const newMessage = {
+        id: messageId,
+        content,
+        sender_id: senderId,
+        group_id: groupId,
+        timestamp,
+        created_at: timestamp,
+        delivered: true,
+        decrypted: true
+      };
+
+      // Create a new array with the message added
+      const updatedMessages = [...existingMessages, newMessage];
+
+      // Sort messages by timestamp
+      updatedMessages.sort((a, b) => {
+        const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
+        const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
+        return timeA - timeB;
+      });
+
+      // Return updated state
+      return {
+        ...prev,
+        [chatKey]: updatedMessages
+      };
+    });
   };
 
   // Add a public refresh function that follows the same pattern as in ContactsContext
@@ -414,6 +457,209 @@ export function MessagesProvider({ children }) {
     }
   };
 
+  // Add a function to send group messages
+  const sendGroupMessage = async (groupId, content) => {
+    if (!groupId || !content || !content.trim() || !currentUser) {
+      throw new Error('Missing required data to send group message');
+    }
+
+    try {
+      const payload = {
+        group_id: groupId,
+        content: content.trim()
+      };
+
+      // Create a consistent timestamp for the optimistic message
+      const now = new Date();
+      const isoTimestamp = now.toISOString();
+
+      // Add optimistic update for immediate UI feedback
+      const tempId = `temp-${Date.now()}`;
+      const optimisticMessage = {
+        id: tempId,
+        content: content.trim(),
+        sender_id: currentUser.id,
+        group_id: groupId,
+        timestamp: isoTimestamp,
+        created_at: isoTimestamp,
+        delivered: true,
+        decrypted: true,
+        preserve_content: true,
+        pending: true
+      };
+
+      // Add the optimistic message to state with group- prefix
+      const chatKey = `group-${groupId}`;
+      setMessages(prev => {
+        const existingMessages = prev[chatKey] || [];
+
+        // Add new message to existing ones
+        const updatedMessages = [...existingMessages, optimisticMessage];
+
+        // Sort messages by timestamp in ascending order (oldest first)
+        updatedMessages.sort((a, b) => {
+          const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
+          const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
+          return timeA - timeB;
+        });
+
+        return {
+          ...prev,
+          [chatKey]: updatedMessages
+        };
+      });
+
+      // Send message to server
+      const response = await api.post('/messages', payload);
+
+      // Update the message with the real ID and remove pending status
+      if (response && response.data && response.data.id) {
+        setMessages(prev => {
+          const chatKey = `group-${groupId}`;
+          const updatedMessages = (prev[chatKey] || []).map(msg =>
+            msg.id === tempId ? {
+              ...msg,
+              id: response.data.id,
+              timestamp: response.data.created_at || msg.timestamp,
+              created_at: response.data.created_at || msg.created_at,
+              pending: false
+            } : msg
+          );
+
+          // Ensure messages are sorted by timestamp
+          updatedMessages.sort((a, b) => {
+            const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
+            const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
+            return timeA - timeB;
+          });
+
+          return {
+            ...prev,
+            [chatKey]: updatedMessages
+          };
+        });
+
+        // Save message content to localStorage for content preservation
+        try {
+          const savedMessages = JSON.parse(localStorage.getItem('preservedMessages') || '{}');
+          savedMessages[response.data.id] = { id: response.data.id, content: content.trim() };
+          localStorage.setItem('preservedMessages', JSON.stringify(savedMessages));
+        } catch (e) {
+          console.error('Error saving message to localStorage', e);
+        }
+      }
+
+      return response?.data;
+    } catch (error) {
+      console.error('Error sending group message:', error);
+
+      // Update the optimistic message to show error state
+      const chatKey = `group-${groupId}`;
+      setMessages(prev => {
+        const updatedMessages = (prev[chatKey] || []).map(msg =>
+          msg.pending ? {
+            ...msg,
+            error: true,
+            errorMessage: error?.response?.data?.detail || 'Failed to send'
+          } : msg
+        );
+
+        return {
+          ...prev,
+          [chatKey]: updatedMessages
+        };
+      });
+
+      throw error;
+    }
+  };
+
+  // Function to load group messages
+  const loadGroupMessages = async (groupId, silent = false) => {
+    if (!groupId) return;
+
+    const chatKey = `group-${groupId}`;
+    const isInitialLoad = !loadedChatsRef.current.has(chatKey);
+
+    try {
+      // Only show loading indicator on initial load
+      if (!silent && isInitialLoad) {
+        setLoading(true);
+      }
+
+      const response = await api.get(`/messages/group/${groupId}`);
+
+      if (!response.data || !Array.isArray(response.data)) {
+        console.warn('Received invalid group messages data format:', response.data);
+        // Initialize as empty array if not valid
+        response.data = [];
+      }
+
+      // Process messages and restore preserved content
+      const processedMessages = response.data.map(msg => {
+        const preservedContent = getPreservedContent(msg.id, null);
+
+        if (preservedContent) {
+          return {
+            ...msg,
+            content: preservedContent,
+            decrypted: true,
+            preserve_content: true
+          };
+        }
+
+        return {
+          ...msg,
+          decrypted: true
+        };
+      });
+
+      // Sort messages by timestamp
+      processedMessages.sort((a, b) => {
+        const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
+        const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
+        return timeA - timeB;
+      });
+
+      // Update state with messages
+      setMessages(prev => ({
+        ...prev,
+        [chatKey]: processedMessages
+      }));
+
+      // Mark as loaded
+      loadedChatsRef.current.add(chatKey);
+
+      // Clear error state
+      setError(null);
+    } catch (err) {
+      console.error('Error loading group messages:', err);
+
+      // Still keep any messages we have
+      if (!messages[chatKey]) {
+        setMessages(prev => ({
+          ...prev,
+          [chatKey]: [] // Empty array to avoid continuous loading attempts
+        }));
+
+        // Even if there's an error, mark as loaded to prevent infinite loading
+        loadedChatsRef.current.add(chatKey);
+      }
+    } finally {
+      // Always turn off loading regardless of success/failure
+      setLoading(false);
+    }
+  };
+
+  // Add a public refresh function for group messages
+  const refreshGroupMessages = async (groupId, silent = false) => {
+    if (!groupId) return;
+
+    console.log(`Refreshing messages for group ${groupId}...`);
+    await loadGroupMessages(groupId, silent);
+    return true;
+  };
+
   const markAsRead = async (messageId) => {
     try {
       await api.put(`/messages/${messageId}/delivered`);
@@ -439,8 +685,11 @@ export function MessagesProvider({ children }) {
     activeChat,
     setActiveChat,
     sendMessage,
+    sendGroupMessage,
     loadMessages,
+    loadGroupMessages,
     refreshMessages,
+    refreshGroupMessages,
     markAsRead,
     getPreservedContent,
     isConnected
