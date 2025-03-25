@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGroups } from '../contexts/GroupsContext';
 import { useMessages } from '../contexts/MessagesContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useContacts } from '../contexts/ContactsContext';
+import EmojiPicker from 'emoji-picker-react';
 import './GroupChat.css';
+import './EmojiPicker.css';
 
 function GroupChat() {
   const [message, setMessage] = useState('');
@@ -14,7 +16,13 @@ function GroupChat() {
   const [creatingGroup, setCreatingGroup] = useState(false);
   const [addingMember, setAddingMember] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState({ type: '', text: '' });
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [emojiSearchTerm, setEmojiSearchTerm] = useState('');
+  const [activeEmojiCategory, setActiveEmojiCategory] = useState('all');
   const messagesEndRef = useRef(null);
+  const emojiButtonRef = useRef(null);
+  const emojiPickerRef = useRef(null);
+  const messageInputRef = useRef(null);
   
   const { currentUser } = useAuth();
   const { contacts, refreshContacts } = useContacts();
@@ -67,6 +75,10 @@ function GroupChat() {
     try {
       await sendGroupMessage(activeGroup, message);
       setMessage('');
+      // Close emoji picker if open
+      if (showEmojiPicker) {
+        setShowEmojiPicker(false);
+      }
     } catch (err) {
       console.error('Error sending group message:', err);
       setFeedbackMessage({ 
@@ -75,6 +87,74 @@ function GroupChat() {
       });
     }
   };
+  
+  // Handle emoji selection
+  const onEmojiClick = useCallback(({ emoji }) => {
+    setMessage(prev => prev + emoji);
+    messageInputRef.current?.focus();
+  }, []);
+  
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        showEmojiPicker &&
+        emojiPickerRef.current && 
+        !emojiPickerRef.current.contains(event.target) &&
+        emojiButtonRef.current &&
+        !emojiButtonRef.current.contains(event.target)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+  
+  // Filter emojis based on search and category
+  const filteredEmojis = useCallback(() => {
+    // This is a simplified version - in a real app, you'd have a proper emoji dataset
+    const commonEmojis = [
+      { emoji: '😊', name: 'Smiling Face with Smiling Eyes', category: 'smileys' },
+      { emoji: '😂', name: 'Face with Tears of Joy', category: 'smileys' },
+      { emoji: '❤️', name: 'Red Heart', category: 'symbols' },
+      { emoji: '👍', name: 'Thumbs Up', category: 'people' },
+      { emoji: '🔥', name: 'Fire', category: 'symbols' },
+      { emoji: '🎉', name: 'Party Popper', category: 'activities' },
+      { emoji: '🙏', name: 'Folded Hands', category: 'people' },
+      { emoji: '😍', name: 'Smiling Face with Heart-Eyes', category: 'smileys' },
+      { emoji: '🤔', name: 'Thinking Face', category: 'smileys' },
+      { emoji: '👋', name: 'Waving Hand', category: 'people' },
+      { emoji: '🌟', name: 'Glowing Star', category: 'symbols' },
+      { emoji: '🥰', name: 'Smiling Face with Hearts', category: 'smileys' },
+      { emoji: '😭', name: 'Loudly Crying Face', category: 'smileys' },
+      { emoji: '🤣', name: 'Rolling on the Floor Laughing', category: 'smileys' },
+      { emoji: '🙄', name: 'Face with Rolling Eyes', category: 'smileys' },
+      { emoji: '👀', name: 'Eyes', category: 'people' },
+      { emoji: '💯', name: 'Hundred Points', category: 'symbols' },
+      { emoji: '💕', name: 'Two Hearts', category: 'symbols' },
+      { emoji: '🫡', name: 'Saluting Face', category: 'smileys' },
+      { emoji: '🤗', name: 'Hugging Face', category: 'smileys' }
+    ];
+    
+    return commonEmojis
+      .filter(emoji => {
+        // Filter by search term
+        if (emojiSearchTerm) {
+          return emoji.name.toLowerCase().includes(emojiSearchTerm.toLowerCase());
+        }
+        
+        // Filter by category
+        if (activeEmojiCategory !== 'all') {
+          return emoji.category === activeEmojiCategory;
+        }
+        
+        return true;
+      });
+  }, [emojiSearchTerm, activeEmojiCategory]);
 
   // Create a new group
   const handleCreateGroup = async (e) => {
@@ -468,12 +548,87 @@ function GroupChat() {
 
             {/* Message input */}
             <form className="message-input-container" onSubmit={handleSendMessage}>
+              <button
+                type="button"
+                ref={emojiButtonRef}
+                className="emoji-button"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                title={showEmojiPicker ? "Close emoji picker" : "Open emoji picker"}
+                aria-label={showEmojiPicker ? "Close emoji picker" : "Open emoji picker"}
+              >
+                {showEmojiPicker ? "✖️" : "😊"}
+              </button>
+              {showEmojiPicker && (
+                <div className="emoji-picker-container" ref={emojiPickerRef}>
+                  <div className="custom-emoji-picker">
+                    <div className="emoji-search">
+                      <input
+                        type="text"
+                        placeholder="Search emoji..."
+                        autoFocus
+                        value={emojiSearchTerm}
+                        onChange={(e) => setEmojiSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    <div className="emoji-categories">
+                      <button
+                        className={`emoji-category ${activeEmojiCategory === 'all' ? 'active' : ''}`}
+                        onClick={() => setActiveEmojiCategory('all')}
+                        title="All Emojis"
+                      >
+                        😊
+                      </button>
+                      <button
+                        className={`emoji-category ${activeEmojiCategory === 'smileys' ? 'active' : ''}`}
+                        onClick={() => setActiveEmojiCategory('smileys')}
+                        title="Smileys & Emotion"
+                      >
+                        😀
+                      </button>
+                      <button
+                        className={`emoji-category ${activeEmojiCategory === 'people' ? 'active' : ''}`}
+                        onClick={() => setActiveEmojiCategory('people')}
+                        title="People & Body"
+                      >
+                        👋
+                      </button>
+                      <button
+                        className={`emoji-category ${activeEmojiCategory === 'symbols' ? 'active' : ''}`}
+                        onClick={() => setActiveEmojiCategory('symbols')}
+                        title="Symbols"
+                      >
+                        💡
+                      </button>
+                    </div>
+                    <div className="emoji-list">
+                      {filteredEmojis().length > 0 ? (
+                        filteredEmojis().map((emoji, index) => (
+                          <button
+                            key={index}
+                            className="emoji-item"
+                            onClick={() => {
+                              onEmojiClick({emoji: emoji.emoji});
+                              setEmojiSearchTerm(''); // Clear search after selection
+                            }}
+                            title={emoji.name}
+                          >
+                            {emoji.emoji}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="no-emoji-results">No emojis found</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
               <input
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Type a message..."
                 className="message-input"
+                ref={messageInputRef}
               />
               <button 
                 type="submit" 
@@ -504,4 +659,4 @@ function GroupChat() {
   );
 }
 
-export default GroupChat; 
+export default GroupChat;
