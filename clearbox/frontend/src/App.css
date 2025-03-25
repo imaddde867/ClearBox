@@ -1859,21 +1859,23 @@ button:disabled {
 
 .badge {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
-  border-radius: 9px;
-  background-color: #ff5722;
+  top: -5px;
+  right: -5px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background-color: #FF5722;
   color: white;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(255, 87, 34, 0.5);
   animation: pulse 1.5s infinite ease-in-out;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  z-index: 10;
 }
 
 @keyframes pulse {
@@ -2566,21 +2568,23 @@ button:disabled {
 
 .badge {
   position: absolute;
-  top: -4px;
-  right: -4px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
-  border-radius: 9px;
-  background-color: #ff5722;
+  top: -5px;
+  right: -5px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background-color: #FF5722;
   color: white;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(255, 87, 34, 0.5);
   animation: pulse 1.5s infinite ease-in-out;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  z-index: 10;
 }
 
 @keyframes pulse {
@@ -5077,18 +5081,21 @@ textarea:focus {
   position: absolute;
   top: -5px;
   right: -5px;
-  background-color: var(--accent-color);
-  color: white;
-  border-radius: 50%;
-  width: 20px;
+  min-width: 20px;
   height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background-color: #FF5722;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 700;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  animation: pulse 1.5s infinite;
+  box-shadow: 0 2px 6px rgba(255, 87, 34, 0.5);
+  animation: pulse 1.5s infinite ease-in-out;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  z-index: 10;
 }
 
 .notification-item {
@@ -6088,16 +6095,18 @@ button:focus, a:focus, input:focus, textarea:focus {
   right: -5px;
   background-color: #FF5722;
   color: white;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 9px;
-  font-size: 0.7rem;
-  font-weight: 600;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  padding: 0 5px;
+  box-shadow: 0 2px 6px rgba(255, 87, 34, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  z-index: 10;
 }
 
 /* Improved chat area */
@@ -6519,4 +6528,25 @@ button:focus, a:focus, input:focus, textarea:focus {
   margin: 0 10px;
   font-size: 14px;
   padding: 5px 10px;
+}
+
+.badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background-color: #FF5722;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(255, 87, 34, 0.5);
+  animation: pulse 1.5s infinite ease-in-out;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  z-index: 10;
 }
