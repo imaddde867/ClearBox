@@ -1,0 +1,240 @@
+/* Enhanced Emoji Picker Styles */
+
+.emoji-picker-container {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 1000;
+  animation: fadeInUp 0.25s cubic-bezier(0.19, 1, 0.22, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  max-height: 380px;
+  width: 340px;
+  margin-bottom: 10px;
+  transform-origin: center bottom;
+}
+
+.custom-emoji-picker {
+  background-color: rgba(25, 25, 35, 0.97);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.emoji-search {
+  padding: 14px;
+  background-color: rgba(35, 35, 45, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.emoji-search input {
+  width: 100%;
+  padding: 10px 12px 10px 38px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  color: white;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255, 255, 255, 0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 12px center;
+  background-size: 16px;
+}
+
+.emoji-search input:focus {
+  outline: none;
+  border-color: rgba(85, 108, 214, 0.7);
+  background-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 2px rgba(85, 108, 214, 0.2);
+}
+
+.emoji-search input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.emoji-categories {
+  display: flex;
+  padding: 10px 12px;
+  background-color: rgba(30, 30, 40, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  scrollbar-width: none;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.emoji-categories::-webkit-scrollbar {
+  display: none;
+}
+
+.emoji-category {
+  background: none;
+  border: none;
+  font-size: 1.15rem;
+  padding: 6px;
+  margin: 0 1px;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  position: relative;
+}
+
+.emoji-category:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.emoji-category.active {
+  background-color: rgba(85, 108, 214, 0.3);
+}
+
+.emoji-category.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 2px;
+  background-color: rgba(85, 108, 214, 0.8);
+  border-radius: 4px;
+}
+
+.emoji-list {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  overflow-y: auto;
+  max-height: 250px;
+  background-color: rgba(25, 25, 35, 0.95);
+}
+
+.emoji-item {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.15s ease;
+  height: 38px;
+  width: 38px;
+  user-select: none;
+}
+
+.emoji-item:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  transform: scale(1.15);
+}
+
+.emoji-item:active {
+  transform: scale(0.9);
+}
+
+.emoji-item:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(85, 108, 214, 0.4);
+}
+
+.no-emoji-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 25px 15px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+}
+
+/* Emoji animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Scrollbar styling for emoji list */
+.emoji-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.emoji-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.emoji-list::-webkit-scrollbar-thumb {
+  background: rgba(85, 108, 214, 0.3);
+  border-radius: 3px;
+}
+
+.emoji-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(85, 108, 214, 0.5);
+}
+
+/* Mobile adjustments for emoji picker */
+@media (max-width: 768px) {
+  .emoji-picker-container {
+    position: fixed;
+    bottom: 70px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-width: 400px;
+    margin: 0 auto;
+    z-index: 1000;
+  }
+  
+  .emoji-list {
+    grid-template-columns: repeat(6, 1fr);
+    max-height: 230px;
+  }
+  
+  .emoji-category {
+    min-width: 32px;
+    height: 32px;
+  }
+}
+
+/* Tooltip for emoji categories */
+.emoji-category[title]::before {
+  content: attr(title);
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+}
+
+.emoji-category:hover[title]::before {
+  opacity: 1;
+  visibility: visible;
+}
