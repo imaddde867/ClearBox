@@ -8,17 +8,17 @@ function Chat({ contacts }) {
   const { currentUser } = useAuth();
   const { activeChat, messages, sendMessage, setActiveChat, loading } = useMessages();
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Filter contacts based on search term
-  const filteredContacts = contacts.filter(contact => 
+  const filteredContacts = contacts.filter(contact =>
     contact.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
+
   // Handle sending a message
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!message.trim() || !activeChat) return;
-    
+
     try {
       await sendMessage(activeChat, message);
       setMessage('');
@@ -26,10 +26,10 @@ function Chat({ contacts }) {
       console.error('Error sending message:', err);
     }
   };
-  
+
   // Active chat messages
   const activeChatMessages = activeChat ? (messages[activeChat] || []) : [];
-  
+
   return (
     <div className="chat-container">
       {/* Sidebar with contacts */}
@@ -43,7 +43,7 @@ function Chat({ contacts }) {
             className="search-input"
           />
         </div>
-        
+
         <div className="contacts-list">
           {filteredContacts.map(contact => (
             <div
@@ -64,7 +64,7 @@ function Chat({ contacts }) {
           ))}
         </div>
       </div>
-      
+
       {/* Chat area */}
       <div className="chat-area">
         {activeChat ? (
@@ -73,7 +73,7 @@ function Chat({ contacts }) {
             <div className="chat-header">
               {contacts.find(c => c.id === activeChat)?.username || 'Chat'}
             </div>
-            
+
             {/* Messages container */}
             <div className="messages-container">
               {loading ? (
@@ -83,8 +83,8 @@ function Chat({ contacts }) {
                   <div className="no-messages">No messages yet. Start a conversation!</div>
                 ) : (
                   activeChatMessages.map(msg => (
-                    <div 
-                      key={msg.id} 
+                    <div
+                      key={msg.id}
                       className={`message ${msg.sender_id === currentUser?.id ? 'own-message' : 'other-message'}`}
                     >
                       <div className="message-content">{msg.content}</div>
@@ -96,7 +96,7 @@ function Chat({ contacts }) {
                 )
               )}
             </div>
-            
+
             {/* Message input */}
             <form className="message-input-container" onSubmit={handleSendMessage}>
               <input
@@ -119,4 +119,4 @@ function Chat({ contacts }) {
   );
 }
 
-export default Chat; 
+export default Chat;

@@ -20,11 +20,11 @@ def get_notifications(
     notifications = db.query(Notification).filter(
         Notification.user_id == current_user.id
     ).order_by(Notification.created_at.desc()).all()
-    
+
     # Ensure we return an array even if empty
     if notifications is None:
         return []
-        
+
     return notifications
 
 @router.post("/notifications/read/{notification_id}")
@@ -40,16 +40,16 @@ def mark_notification_as_read(
         Notification.id == notification_id,
         Notification.user_id == current_user.id
     ).first()
-    
+
     if not notification:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Notification not found"
         )
-    
+
     notification.read = True
     db.commit()
-    
+
     return {"status": "success"}
 
 @router.post("/notifications/read-all")
@@ -64,9 +64,9 @@ def mark_all_notifications_as_read(
         Notification.user_id == current_user.id,
         Notification.read == False
     ).update({"read": True})
-    
+
     db.commit()
-    
+
     return {"status": "success"}
 
 @router.delete("/notifications/{notification_id}")
@@ -82,14 +82,14 @@ def delete_notification(
         Notification.id == notification_id,
         Notification.user_id == current_user.id
     ).first()
-    
+
     if not notification:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Notification not found"
         )
-    
+
     db.delete(notification)
     db.commit()
-    
-    return {"status": "success"} 
+
+    return {"status": "success"}

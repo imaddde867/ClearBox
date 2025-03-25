@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
       console.warn('validateToken: No token found in localStorage');
       return false;
     }
-    
+
     try {
       // Basic validation - check if token has three parts (header.payload.signature)
       const parts = token.split('.');
@@ -28,17 +28,17 @@ export function AuthProvider({ children }) {
         console.warn('validateToken: Token format is invalid');
         return false;
       }
-      
+
       // Try to decode the payload (middle part)
       const payload = JSON.parse(atob(parts[1]));
-      
+
       // Check if token is expired
       if (payload.exp && payload.exp * 1000 < Date.now()) {
         console.warn('validateToken: Token is expired');
         localStorage.removeItem('token');
         return false;
       }
-      
+
       return true;
     } catch (error) {
       console.error('validateToken: Error validating token', error);
@@ -56,16 +56,16 @@ export function AuthProvider({ children }) {
       console.log('No valid auth token found, skipping profile load');
       setLoading(false);
     }
-    
+
     // Listen for auth error events (from API interceptor)
     const handleAuthError = (event) => {
       console.log('Auth error received:', event.detail.message);
       setAuthError(event.detail.message);
       setCurrentUser(null);
     };
-    
+
     window.addEventListener('auth:error', handleAuthError);
-    
+
     return () => {
       window.removeEventListener('auth:error', handleAuthError);
     };
@@ -95,13 +95,13 @@ export function AuthProvider({ children }) {
     try {
       setAuthStatus('loading');
       setLoading(true);
-      
+
       // Use PUT method to match the backend endpoint
       const response = await api.put('/users/me', userData);
-      
+
       // Update the current user state with the response data
       setCurrentUser(response.data);
-      
+
       setAuthStatus('success');
       return response.data;
     } catch (error) {
@@ -118,7 +118,7 @@ export function AuthProvider({ children }) {
     try {
       setAuthStatus('loading');
       setLoading(true);
-      
+
       // Include the consent data in signup
       const signupData = {
         username,
@@ -126,11 +126,11 @@ export function AuthProvider({ children }) {
         password,
         ...consentData
       };
-      
+
       console.log('Signing up new user...');
       const response = await api.post('/register', signupData);
       console.log('Signup successful, saving token');
-      
+
       if (response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
         await loadUserProfile();
@@ -138,7 +138,7 @@ export function AuthProvider({ children }) {
         console.error('No token received during signup');
         throw new Error('Authentication failed: No token received');
       }
-      
+
       setAuthStatus('success');
       return response.data;
     } catch (error) {
@@ -155,37 +155,37 @@ export function AuthProvider({ children }) {
     try {
       setAuthStatus('loading');
       setLoading(true);
-      
+
       // Create form data for OAuth2 password flow
       const formData = new URLSearchParams();
       formData.append('username', usernameOrEmail); // Backend expects 'username' field
       formData.append('password', password);
-      
+
       console.log('Logging in user...');
       const response = await api.post('/login', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
-      
+
       console.log('Login successful, saving token');
       if (response.data.access_token) {
         // Store token in localStorage with consistent key
         localStorage.setItem('token', response.data.access_token);
-        
+
         // Double-check that token was saved correctly
         const savedToken = localStorage.getItem('token');
         if (!savedToken) {
           console.error('Token was not properly saved to localStorage');
           throw new Error('Authentication failed: Could not save token');
         }
-        
+
         await loadUserProfile();
       } else {
         console.error('No token received during login');
         throw new Error('Authentication failed: No token received');
       }
-      
+
       setAuthStatus('success');
       return response.data;
     } catch (error) {
@@ -226,4 +226,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-} 
+}

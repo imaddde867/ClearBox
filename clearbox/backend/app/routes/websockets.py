@@ -18,14 +18,14 @@ class ConnectionManager:
         self.active_connections: Dict[int, WebSocket] = {}
         # Set of online users
         self.online_users: Set[int] = set()
-        
+
     async def connect(self, user_id: int, websocket: WebSocket):
         await websocket.accept()
         self.active_connections[user_id] = websocket
         self.online_users.add(user_id)
         # Broadcast online status to all connected clients
         await self.broadcast_presence(user_id, True)
-        
+
     def disconnect(self, user_id: int):
         if user_id in self.active_connections:
             del self.active_connections[user_id]
@@ -33,7 +33,7 @@ class ConnectionManager:
             self.online_users.remove(user_id)
             # Schedule broadcast in a fire-and-forget task
             asyncio.create_task(self.broadcast_presence(user_id, False))
-    
+
     async def broadcast_presence(self, user_id: int, is_online: bool):
         """Broadcast user's online status to all connected clients"""
         presence_message = {
@@ -41,7 +41,7 @@ class ConnectionManager:
             "userId": user_id,
             "online": is_online
         }
-        
+
         # Send to all connected clients
         for client_id, connection in self.active_connections.items():
             try:
@@ -49,14 +49,14 @@ class ConnectionManager:
             except Exception:
                 # Ignore errors when broadcasting, they'll be cleaned up later
                 pass
-    
+
     async def send_personal_message(self, message: dict, user_id: int):
         """Send a message to a specific user if they're connected"""
         if user_id in self.active_connections:
             await self.active_connections[user_id].send_text(json.dumps(message))
             return True
         return False
-    
+
     def is_user_online(self, user_id: int) -> bool:
         """Check if a user is online"""
         return user_id in self.online_users
@@ -70,16 +70,16 @@ async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Dep
     try:
         # Authenticate the user from the token
         user = await get_current_user_ws(token, db)
-        
+
         if not user:
             await websocket.close(code=4001, reason="Authentication failed")
             return
-            
+
         await manager.connect(user.id, websocket)
-        
+
         # When user connects, send them any undelivered messages
         await send_undelivered_messages(user.id, db)
-        
+
         try:
             # Keep connection alive and handle messages
             while True:
@@ -98,10 +98,10 @@ async def websocket_endpoint(websocket: WebSocket, token: str, db: Session = Dep
                 except json.JSONDecodeError:
                     # Ignore malformed messages
                     pass
-                    
+
         except WebSocketDisconnect:
             manager.disconnect(user.id)
-            
+
     except Exception as e:
         # Handle any other exceptions
         if user:
@@ -118,14 +118,14 @@ async def send_undelivered_messages(user_id: int, db: Session):
         Message.receiver_id == user_id,
         Message.delivered == False
     ).order_by(desc(Message.created_at)).all()
-    
+
     for msg in undelivered_messages:
         # Decrypt message content
         try:
-            decrypted_content = decrypt_message(msg.content) 
+            decrypted_content = decrypt_message(msg.content)
         except:
             decrypted_content = "[Encrypted message]"
-        
+
         # Prepare message for sending
         message_data = {
             "type": "message",
@@ -134,7 +134,7 @@ async def send_undelivered_messages(user_id: int, db: Session):
             "content": decrypted_content,
             "timestamp": msg.created_at.isoformat()
         }
-        
+
         # Send message
         if await manager.send_personal_message(message_data, user_id):
             # Mark as delivered in the database
@@ -147,7 +147,7 @@ async def mark_message_read(message_id: int, user_id: int, db: Session):
         Message.id == message_id,
         Message.receiver_id == user_id
     ).first()
-    
+
     if message:
         message.delivered = True
-        db.commit() 
+        db.commit()

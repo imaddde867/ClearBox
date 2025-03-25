@@ -24,4 +24,4 @@ root.render(
       </NotificationsProvider>
     </AuthProvider>
   </React.StrictMode>
-); 
+);

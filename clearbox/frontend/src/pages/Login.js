@@ -7,18 +7,18 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!username.trim() || !password.trim()) {
       setError('Username and password are required');
       return;
     }
-    
+
     try {
       setError('');
       setLoading(true);
@@ -31,14 +31,14 @@ function Login() {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="auth-container">
       <div className="auth-card">
         <h2>Login to ClearBox</h2>
-        
+
         {error && <div className="error-message">{error}</div>}
-        
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="username">Username</label>
@@ -51,7 +51,7 @@ function Login() {
               autoFocus
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <input
@@ -62,12 +62,12 @@ function Login() {
               disabled={loading}
             />
           </div>
-          
+
           <button type="submit" className="auth-button" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-        
+
         <div className="auth-links">
           <p>
             Don't have an account? <a href="/register">Register</a>
@@ -78,4 +78,4 @@ function Login() {
   );
 }
 
-export default Login; 
+export default Login;
