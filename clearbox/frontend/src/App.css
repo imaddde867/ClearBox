@@ -2092,6 +2092,7 @@ button:disabled {
 
 .status {
   font-size: 0.8rem;
+  color: #aaa;
   display: flex;
   align-items: center;
 }
@@ -2102,23 +2103,25 @@ button:disabled {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  margin-right: 5px;
+  margin-right: 6px;
+  background-color: #777;
 }
 
 .status.online {
-  color: #4CAF50;
+  color: #7adb7a;
 }
 
 .status.online::before {
   background-color: #4CAF50;
+  box-shadow: 0 0 5px #4CAF50;
 }
 
 .status.offline {
-  color: #F44336;
+  color: #aaa;
 }
 
 .status.offline::before {
-  background-color: #F44336;
+  background-color: #999;
 }
 
 /* Search Container */
@@ -2801,6 +2804,7 @@ button:disabled {
 
 .status {
   font-size: 0.8rem;
+  color: #aaa;
   display: flex;
   align-items: center;
 }
@@ -2811,23 +2815,25 @@ button:disabled {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  margin-right: 5px;
+  margin-right: 6px;
+  background-color: #777;
 }
 
 .status.online {
-  color: #4CAF50;
+  color: #7adb7a;
 }
 
 .status.online::before {
   background-color: #4CAF50;
+  box-shadow: 0 0 5px #4CAF50;
 }
 
 .status.offline {
-  color: #F44336;
+  color: #aaa;
 }
 
 .status.offline::before {
-  background-color: #F44336;
+  background-color: #999;
 }
 
 /* Search Container */
