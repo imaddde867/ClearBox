@@ -11,9 +11,6 @@ function GroupChat() {
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [selectedContact, setSelectedContact] = useState(null);
-  const [creatingGroup, setCreatingGroup] = useState(false);
-  const [addingMember, setAddingMember] = useState(false);
-  const [feedbackMessage, setFeedbackMessage] = useState({ type: '', text: '' });
   const messagesEndRef = useRef(null);
   
   const { currentUser } = useAuth();
@@ -37,16 +34,6 @@ function GroupChat() {
     loading: messagesLoading 
   } = useMessages();
 
-  // Clear feedback message after 3 seconds
-  useEffect(() => {
-    if (feedbackMessage.text) {
-      const timer = setTimeout(() => {
-        setFeedbackMessage({ type: '', text: '' });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [feedbackMessage]);
-
   // Scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -69,61 +56,34 @@ function GroupChat() {
       setMessage('');
     } catch (err) {
       console.error('Error sending group message:', err);
-      setFeedbackMessage({ 
-        type: 'error', 
-        text: 'Failed to send message. Please try again.' 
-      });
     }
   };
 
   // Create a new group
   const handleCreateGroup = async (e) => {
     e.preventDefault();
-    if (!newGroupName.trim() || creatingGroup) return;
+    if (!newGroupName.trim()) return;
 
-    setCreatingGroup(true);
     try {
       await createGroup(newGroupName);
       setNewGroupName('');
       setShowNewGroup(false);
-      setFeedbackMessage({ 
-        type: 'success', 
-        text: `Group "${newGroupName}" created successfully!` 
-      });
     } catch (err) {
       console.error('Error creating group:', err);
-      setFeedbackMessage({ 
-        type: 'error', 
-        text: 'Failed to create group. Please try again.' 
-      });
-    } finally {
-      setCreatingGroup(false);
     }
   };
 
   // Add a contact to current group
   const handleAddMember = async () => {
-    if (!selectedContact || !activeGroup || addingMember) return;
+    if (!selectedContact || !activeGroup) return;
 
-    setAddingMember(true);
     try {
       await addGroupMember(activeGroup, selectedContact);
-      const contactName = contacts.find(c => c.id === Number(selectedContact))?.username || 'Contact';
-      setFeedbackMessage({ 
-        type: 'success', 
-        text: `${contactName} added to the group!` 
-      });
       setSelectedContact(null);
       // Refresh contact list
       refreshContacts();
     } catch (err) {
       console.error('Error adding member to group:', err);
-      setFeedbackMessage({ 
-        type: 'error', 
-        text: 'Failed to add member. Please try again.' 
-      });
-    } finally {
-      setAddingMember(false);
     }
   };
 
@@ -133,19 +93,9 @@ function GroupChat() {
     
     if (window.confirm('Are you sure you want to delete this group?')) {
       try {
-        const groupName = groups.find(g => g.id === activeGroup)?.name;
         await deleteGroup(activeGroup);
-        setFeedbackMessage({ 
-          type: 'success', 
-          text: `Group "${groupName}" deleted!` 
-        });
-        setShowGroupDetails(false);
       } catch (err) {
         console.error('Error deleting group:', err);
-        setFeedbackMessage({ 
-          type: 'error', 
-          text: 'Failed to delete group. Please try again.' 
-        });
       }
     }
   };
@@ -156,19 +106,9 @@ function GroupChat() {
     
     if (window.confirm('Are you sure you want to leave this group?')) {
       try {
-        const groupName = groups.find(g => g.id === activeGroup)?.name;
         await leaveGroup(activeGroup);
-        setFeedbackMessage({ 
-          type: 'success', 
-          text: `You left the group "${groupName}"` 
-        });
-        setShowGroupDetails(false);
       } catch (err) {
         console.error('Error leaving group:', err);
-        setFeedbackMessage({ 
-          type: 'error', 
-          text: 'Failed to leave group. Please try again.' 
-        });
       }
     }
   };
@@ -191,46 +131,8 @@ function GroupChat() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Format date to show in message groups
-  const formatDate = (timestamp) => {
-    const date = new Date(timestamp);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return date.toLocaleDateString();
-    }
-  };
-
-  // Group messages by date for better visual organization
-  const groupMessagesByDate = (messages) => {
-    const groups = {};
-    messages.forEach(msg => {
-      const date = new Date(msg.timestamp || msg.created_at).toDateString();
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(msg);
-    });
-    return groups;
-  };
-
-  const messagesByDate = groupMessagesByDate(activeGroupMessages);
-
   return (
     <div className="chat-container">
-      {/* Feedback message */}
-      {feedbackMessage.text && (
-        <div className={`feedback-message ${feedbackMessage.type}`}>
-          {feedbackMessage.text}
-        </div>
-      )}
-    
       {/* Groups sidebar */}
       <div className="contacts-sidebar">
         <div className="sidebar-header">
@@ -239,17 +141,7 @@ function GroupChat() {
             className="new-group-button" 
             onClick={() => setShowNewGroup(!showNewGroup)}
           >
-            {showNewGroup ? (
-              <>
-                <span className="icon">✕</span>
-                <span>Cancel</span>
-              </>
-            ) : (
-              <>
-                <span className="icon">+</span>
-                <span>New Group</span>
-              </>
-            )}
+            {showNewGroup ? 'Cancel' : 'New Group'}
           </button>
         </div>
         
@@ -262,31 +154,17 @@ function GroupChat() {
               value={newGroupName}
               onChange={(e) => setNewGroupName(e.target.value)}
               className="new-group-input"
-              autoFocus
             />
-            <button 
-              type="submit" 
-              className={`create-group-button ${creatingGroup ? 'loading' : ''}`}
-              disabled={creatingGroup || !newGroupName.trim()}
-            >
-              {creatingGroup ? 'Creating...' : 'Create Group'}
-            </button>
+            <button type="submit" className="create-group-button">Create</button>
           </form>
         )}
         
         {/* Groups list */}
         <div className="groups-list">
           {groupsLoading ? (
-            <div className="loading-indicator">
-              <div className="spinner"></div>
-              <span>Loading groups...</span>
-            </div>
+            <div className="loading">Loading groups...</div>
           ) : groups.length === 0 ? (
-            <div className="no-groups">
-              <div className="empty-state-icon">👥</div>
-              <p>No groups yet</p>
-              <p>Create a new group to start chatting with multiple contacts at once.</p>
-            </div>
+            <div className="no-groups">No groups yet</div>
           ) : (
             groups.map(group => (
               <div
@@ -299,15 +177,9 @@ function GroupChat() {
                 </div>
                 <div className="group-info">
                   <div className="group-name">{group.name}</div>
-                  <div className="group-meta">
-                    {group.creator_id === currentUser?.id ? (
-                      <div className="group-role">Creator</div>
-                    ) : (
-                      <div className="group-member-count">
-                        {groupMembers[group.id]?.length || 0} members
-                      </div>
-                    )}
-                  </div>
+                  {group.creator_id === currentUser?.id && (
+                    <div className="group-role">Creator</div>
+                  )}
                 </div>
               </div>
             ))
@@ -321,17 +193,7 @@ function GroupChat() {
           <>
             {/* Group chat header */}
             <div className="chat-header">
-              <div className="header-group-info">
-                <div className="header-group-avatar">
-                  {currentGroup?.name.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <div className="header-group-name">{currentGroup?.name || 'Group Chat'}</div>
-                  <div className="header-group-meta">
-                    {currentGroupMembers.length} members
-                  </div>
-                </div>
-              </div>
+              <div>{currentGroup?.name || 'Group Chat'}</div>
               <button 
                 className="group-details-button"
                 onClick={() => setShowGroupDetails(!showGroupDetails)}
@@ -355,9 +217,6 @@ function GroupChat() {
                         {member.user.id === currentGroup?.creator_id && (
                           <span className="creator-badge">Creator</span>
                         )}
-                        {member.user.id === currentUser?.id && (
-                          <span className="self-badge">You</span>
-                        )}
                       </div>
                     </div>
                   ))}
@@ -373,28 +232,24 @@ function GroupChat() {
                       className="contact-select"
                     >
                       <option value="">Select a contact</option>
-                      {contacts.length === 0 ? (
-                        <option disabled>No contacts available</option>
-                      ) : (
-                        contacts.map(contact => {
-                          // Check if contact is already a member
-                          const isMember = currentGroupMembers.some(
-                            member => member.user.id === contact.id
-                          );
-                          return !isMember && (
-                            <option key={contact.id} value={contact.id}>
-                              {contact.username}
-                            </option>
-                          );
-                        })
-                      )}
+                      {contacts.map(contact => {
+                        // Check if contact is already a member
+                        const isMember = currentGroupMembers.some(
+                          member => member.user.id === contact.id
+                        );
+                        return !isMember && (
+                          <option key={contact.id} value={contact.id}>
+                            {contact.username}
+                          </option>
+                        );
+                      })}
                     </select>
                     <button 
                       onClick={handleAddMember}
-                      disabled={!selectedContact || addingMember}
-                      className={`add-member-button ${addingMember ? 'loading' : ''}`}
+                      disabled={!selectedContact}
+                      className="add-member-button"
                     >
-                      {addingMember ? 'Adding...' : 'Add to Group'}
+                      Add to Group
                     </button>
                   </div>
                 )}
@@ -406,16 +261,14 @@ function GroupChat() {
                       onClick={handleDeleteGroup}
                       className="delete-group-button"
                     >
-                      <span className="icon">🗑️</span>
-                      <span>Delete Group</span>
+                      Delete Group
                     </button>
                   ) : (
                     <button 
                       onClick={handleLeaveGroup}
                       className="leave-group-button"
                     >
-                      <span className="icon">👋</span>
-                      <span>Leave Group</span>
+                      Leave Group
                     </button>
                   )}
                 </div>
@@ -425,40 +278,26 @@ function GroupChat() {
             {/* Messages container */}
             <div className={`messages-container ${showGroupDetails ? 'with-sidebar' : ''}`}>
               {messagesLoading ? (
-                <div className="loading-indicator">
-                  <div className="spinner"></div>
-                  <span>Loading messages...</span>
-                </div>
+                <div className="loading-indicator">Loading messages...</div>
               ) : (
                 activeGroupMessages.length === 0 ? (
-                  <div className="no-messages">
-                    <div className="empty-state-icon">💬</div>
-                    <p>No messages yet</p>
-                    <p>Be the first to start a conversation!</p>
-                  </div>
+                  <div className="no-messages">No messages yet. Start a conversation!</div>
                 ) : (
-                  Object.entries(messagesByDate).map(([date, msgs]) => (
-                    <div key={date} className="message-date-group">
-                      <div className="date-divider">
-                        <span>{formatDate(msgs[0].timestamp || msgs[0].created_at)}</span>
-                      </div>
-                      {msgs.map(msg => (
-                        <div
-                          key={msg.id}
-                          className={`message ${msg.sender_id === currentUser?.id ? 'own-message' : 'other-message'}`}
-                        >
-                          {/* Show sender name for messages not from current user */}
-                          {msg.sender_id !== currentUser?.id && (
-                            <div className="message-sender">
-                              {currentGroupMembers.find(m => m.user.id === msg.sender_id)?.user.username || 'User'}
-                            </div>
-                          )}
-                          <div className="message-content">{msg.content}</div>
-                          <div className="message-time">
-                            {formatTime(msg.timestamp || msg.created_at)}
-                          </div>
+                  activeGroupMessages.map(msg => (
+                    <div
+                      key={msg.id}
+                      className={`message ${msg.sender_id === currentUser?.id ? 'own-message' : 'other-message'}`}
+                    >
+                      {/* Show sender name for messages not from current user */}
+                      {msg.sender_id !== currentUser?.id && (
+                        <div className="message-sender">
+                          {currentGroupMembers.find(m => m.user.id === msg.sender_id)?.user.username || 'User'}
                         </div>
-                      ))}
+                      )}
+                      <div className="message-content">{msg.content}</div>
+                      <div className="message-time">
+                        {formatTime(msg.timestamp || msg.created_at)}
+                      </div>
                     </div>
                   ))
                 )
@@ -475,26 +314,18 @@ function GroupChat() {
                 placeholder="Type a message..."
                 className="message-input"
               />
-              <button 
-                type="submit" 
-                className="send-button"
-                disabled={!message.trim()}
-              >
-                Send
-              </button>
+              <button type="submit" className="send-button">Send</button>
             </form>
           </>
         ) : (
           <div className="no-chat-selected">
-            <div className="empty-state-icon">👥</div>
             <div>Select a group to start chatting</div>
             {groups.length === 0 && (
               <button 
                 onClick={() => setShowNewGroup(true)}
                 className="create-first-group"
               >
-                <span className="icon">+</span>
-                <span>Create Your First Group</span>
+                Create Your First Group
               </button>
             )}
           </div>
