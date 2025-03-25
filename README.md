@@ -12,6 +12,17 @@ ClearBox is a secure, scalable, GDPR-compliant messaging app built with Python (
 - **GDPR Compliance**: Users can delete their accounts and data
 - **Modern UI**: Futuristic, dark-themed interface built with React
 
+## Code Optimization
+
+The codebase has been optimized for better performance and maintainability:
+
+- Removed unnecessary temporary and backup files
+- Cleaned up Python cache directories and compiled .pyc files
+- Removed trailing whitespace and fixed indentation
+- Ensured consistent coding style throughout the project
+- Removed redundant blank lines while preserving logical separation
+- Optimized imports and dependencies
+
 ## Technologies Used
 
 - **Backend**: Python 3.8+, FastAPI, SQLAlchemy, PostgreSQL
