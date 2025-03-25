@@ -39,7 +39,7 @@ except Exception as e:
             if isinstance(data, str):
                 data = data.encode()
             return data
-        
+
         def decrypt(self, data):
             if isinstance(data, bytes):
                 try:
@@ -47,7 +47,7 @@ except Exception as e:
                 except:
                     return str(data)
             return str(data)
-    
+
     fernet = DummyFernet()
     logger.warning("Using dummy encryption for demo purposes")
 
@@ -82,4 +82,4 @@ def decrypt_message(encrypted_message):
 # Generate a Fernet key to be used for message encryption/decryption
 def generate_key():
     """Generate a new Fernet key."""
-    return Fernet.generate_key().decode() 
+    return Fernet.generate_key().decode()

@@ -25,16 +25,16 @@ def create_user(
             User.email == user.email
         )
     ).first()
-    
+
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username or email already registered"
         )
-    
+
     # Hash the password
     hashed_password = get_password_hash(user.password)
-    
+
     # Create the new user
     db_user = User(
         username=user.username,
@@ -42,11 +42,11 @@ def create_user(
         password=hashed_password,
         full_name=user.full_name
     )
-    
+
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    
+
     return db_user
 
 @router.get("/users/me", response_model=UserResponse)
@@ -69,7 +69,7 @@ def search_users(
     """
     if len(q) < 2:
         return []
-    
+
     search_term = f"%{q}%"
     users = db.query(User).filter(
         or_(
@@ -78,7 +78,7 @@ def search_users(
         ),
         User.id != current_user.id  # Exclude current user
     ).limit(10).all()
-    
+
     return users
 
 @router.put("/users/me", response_model=UserResponse)
@@ -103,7 +103,7 @@ def update_current_user(
                 detail="Username already registered"
             )
         current_user.username = user_update.username
-    
+
     if user_update.email is not None and user_update.email != "":
         # Check if email is already taken
         existing_user = db.query(User).filter(
@@ -116,21 +116,21 @@ def update_current_user(
                 detail="Email already registered"
             )
         current_user.email = user_update.email
-    
+
     if user_update.full_name is not None:
         current_user.full_name = user_update.full_name
-    
+
     if user_update.bio is not None:
         current_user.bio = user_update.bio
-    
+
     if user_update.avatar_url is not None:
         current_user.avatar_url = user_update.avatar_url
-    
+
     # If password is provided, update it
     if user_update.password is not None and user_update.password != "":
         current_user.password = get_password_hash(user_update.password)
-    
+
     db.commit()
     db.refresh(current_user)
-    
-    return current_user 
+
+    return current_user

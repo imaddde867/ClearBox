@@ -9,29 +9,29 @@ function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const { register } = useAuth();
   const navigate = useNavigate();
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate form inputs
     if (!username.trim() || !email.trim() || !password || !confirmPassword) {
       setError('All fields are required');
       return;
     }
-    
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-    
+
     if (password.length < 6) {
       setError('Password must be at least 6 characters');
       return;
     }
-    
+
     try {
       setError('');
       setLoading(true);
@@ -44,14 +44,14 @@ function Register() {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="auth-container">
       <div className="auth-card">
         <h2>Register for ClearBox</h2>
-        
+
         {error && <div className="error-message">{error}</div>}
-        
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="username">Username</label>
@@ -64,7 +64,7 @@ function Register() {
               autoFocus
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
@@ -75,7 +75,7 @@ function Register() {
               disabled={loading}
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <input
@@ -86,7 +86,7 @@ function Register() {
               disabled={loading}
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
             <input
@@ -97,12 +97,12 @@ function Register() {
               disabled={loading}
             />
           </div>
-          
+
           <button type="submit" className="auth-button" disabled={loading}>
             {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
-        
+
         <div className="auth-links">
           <p>
             Already have an account? <a href="/login">Login</a>
@@ -113,4 +113,4 @@ function Register() {
   );
 }
 
-export default Register; 
+export default Register;

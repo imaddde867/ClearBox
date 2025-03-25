@@ -6,7 +6,7 @@ import api from '../services/api';
 function Settings() {
   const { currentUser, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
-  
+
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
@@ -15,7 +15,7 @@ function Settings() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
-  
+
   // Load user data
   useEffect(() => {
     if (currentUser) {
@@ -23,22 +23,22 @@ function Settings() {
       setEmail(currentUser.email || '');
     }
   }, [currentUser]);
-  
+
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    
+
     if (!username.trim()) {
       setError('Username is required');
       return;
     }
-    
+
     try {
       setLoading(true);
       setError(null);
       setMessage(null);
-      
+
       await updateProfile({ username, email });
-      
+
       setMessage('Profile updated successfully');
     } catch (err) {
       console.error('Failed to update profile:', err);
@@ -47,35 +47,35 @@ function Settings() {
       setLoading(false);
     }
   };
-  
+
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    
+
     if (!currentPassword || !newPassword || !confirmPassword) {
       setError('All password fields are required');
       return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       setError('New passwords do not match');
       return;
     }
-    
+
     try {
       setLoading(true);
       setError(null);
       setMessage(null);
-      
+
       await api.post('/users/change-password', {
         current_password: currentPassword,
         new_password: newPassword
       });
-      
+
       // Clear password fields
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      
+
       setMessage('Password changed successfully');
     } catch (err) {
       console.error('Failed to change password:', err);
@@ -84,7 +84,7 @@ function Settings() {
       setLoading(false);
     }
   };
-  
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -94,14 +94,14 @@ function Settings() {
       setError('Failed to log out');
     }
   };
-  
+
   return (
     <div className="settings-container">
       <h2>Account Settings</h2>
-      
+
       {message && <div className="success-message">{message}</div>}
       {error && <div className="error-message">{error}</div>}
-      
+
       <div className="settings-section">
         <h3>Profile Information</h3>
         <form onSubmit={handleUpdateProfile}>
@@ -115,7 +115,7 @@ function Settings() {
               disabled={loading}
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
@@ -126,13 +126,13 @@ function Settings() {
               disabled={loading}
             />
           </div>
-          
+
           <button type="submit" className="settings-button" disabled={loading}>
             {loading ? 'Updating...' : 'Update Profile'}
           </button>
         </form>
       </div>
-      
+
       <div className="settings-section">
         <h3>Change Password</h3>
         <form onSubmit={handleChangePassword}>
@@ -146,7 +146,7 @@ function Settings() {
               disabled={loading}
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="newPassword">New Password</label>
             <input
@@ -157,7 +157,7 @@ function Settings() {
               disabled={loading}
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="confirmPassword">Confirm New Password</label>
             <input
@@ -168,13 +168,13 @@ function Settings() {
               disabled={loading}
             />
           </div>
-          
+
           <button type="submit" className="settings-button" disabled={loading}>
             {loading ? 'Changing Password...' : 'Change Password'}
           </button>
         </form>
       </div>
-      
+
       <div className="settings-section">
         <h3>Account Actions</h3>
         <button onClick={handleLogout} className="logout-button">
@@ -185,4 +185,4 @@ function Settings() {
   );
 }
 
-export default Settings; 
+export default Settings;

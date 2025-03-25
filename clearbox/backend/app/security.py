@@ -39,17 +39,17 @@ def authenticate_user(db: Session, email_or_username: str, password: str):
     """
     # Try finding by email first
     user = db.query(User).filter(User.email == email_or_username).first()
-    
+
     # If not found by email, try username
     if not user:
         user = db.query(User).filter(User.username == email_or_username).first()
-        
+
     if not user:
         return False
-        
+
     if not verify_password(password, user.password):
         return False
-        
+
     return user
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
@@ -71,10 +71,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     if token is None:
         raise credentials_exception
-    
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
@@ -82,11 +82,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    
+
     user = db.query(User).filter(User.username == username).first()
     if user is None:
         raise credentials_exception
-    
+
     return user
 
 async def get_current_active_user(current_user: User = Depends(get_current_user)):
@@ -99,7 +99,7 @@ async def get_current_user_ws(token: str, db: Session):
     """Authenticate user from token for WebSocket connections"""
     if not token:
         return None
-    
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
@@ -107,6 +107,6 @@ async def get_current_user_ws(token: str, db: Session):
             return None
     except JWTError:
         return None
-    
+
     user = db.query(User).filter(User.username == username).first()
-    return user 
+    return user

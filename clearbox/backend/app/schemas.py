@@ -70,7 +70,7 @@ class ContactRequestResponse(BaseModel):
 class ContactRequestWithUserResponse(BaseModel):
     id: int
     from_user: UserSearchResponse
-    
+
     class Config:
         orm_mode = True
 
@@ -143,4 +143,4 @@ class NotificationResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True 
+        orm_mode = True

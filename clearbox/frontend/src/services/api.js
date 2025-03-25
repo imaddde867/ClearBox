@@ -20,7 +20,7 @@ const logTokenStatus = () => {
 const logRequestDetails = (config) => {
   // More detailed logging for message-related endpoints
   const isMessageEndpoint = config.url.includes('/messages');
-  
+
   if (isMessageEndpoint) {
     console.log(`MESSAGE API Request:
       URL: ${config.baseURL}${config.url}
@@ -30,7 +30,7 @@ const logRequestDetails = (config) => {
       Data: ${config.method !== 'get' ? JSON.stringify(config.data || {}) : 'GET request (no data)'}
     `);
   }
-  
+
   return config;
 };
 
@@ -40,17 +40,17 @@ api.interceptors.request.use(
     // Check if a token exists in local storage
     const token = localStorage.getItem('token');
     console.log('Token status:', token ? 'Found' : 'Missing', '-', new Date().toISOString());
-    
+
     // If the token exists, add it to the Authorization header
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     // Log extra details for message endpoints
     if (config.url.includes('/messages')) {
       return logRequestDetails(config);
     }
-    
+
     return config;
   },
   error => {
@@ -71,7 +71,7 @@ api.interceptors.response.use(
         Data: ${JSON.stringify(response.data)}
       `);
     }
-    
+
     // Any status code within the range of 2xx triggers this function
     return response;
   },
@@ -101,7 +101,7 @@ api.interceptors.response.use(
       // Handle 500 Internal Server Error
       console.error('Server error. Please try again later or contact support.');
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -135,12 +135,12 @@ export const debugApiEndpoints = () => {
     '/contacts',
     '/contacts/requests'
   ];
-  
+
   console.log('Expected API endpoints:');
   expectedEndpoints.forEach(endpoint => {
     console.log(`- ${endpoint}`);
   });
-  
+
   console.log('To debug 404 errors, check if these endpoints match your backend implementation.');
 };
 
@@ -149,4 +149,4 @@ logTokenStatus();
 debugApiEndpoints();
 
 // Export the API service and utilities
-export default api; 
+export default api;

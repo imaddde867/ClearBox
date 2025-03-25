@@ -23,20 +23,20 @@ def create_group(
         name=group.name,
         creator_id=current_user.id
     )
-    
+
     db.add(db_group)
     db.commit()
     db.refresh(db_group)
-    
+
     # Add the creator as a member automatically
     group_member = GroupMember(
         group_id=db_group.id,
         user_id=current_user.id
     )
-    
+
     db.add(group_member)
     db.commit()
-    
+
     return db_group
 
 @router.post("/group/{group_id}/add", response_model=GroupWithMembersResponse)
@@ -56,20 +56,20 @@ def add_member_to_group(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Group not found"
         )
-    
+
     # Check if the current user is the creator or a member
     is_creator = group.creator_id == current_user.id
     is_member = db.query(GroupMember).filter(
         GroupMember.group_id == group_id,
         GroupMember.user_id == current_user.id
     ).first() is not None
-    
+
     if not is_creator and not is_member:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You must be a group member to add contacts"
         )
-    
+
     # Check if the user to add exists
     user_to_add = db.query(User).filter(User.id == member.user_id).first()
     if not user_to_add:
@@ -77,40 +77,40 @@ def add_member_to_group(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
+
     # Check if the user is already in the group
     existing_member = db.query(GroupMember).filter(
         GroupMember.group_id == group_id,
         GroupMember.user_id == member.user_id
     ).first()
-    
+
     if existing_member:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User is already a member of this group"
         )
-    
+
     # Check if the user is a contact
     contact = db.query(Contact).filter(
         Contact.user_id == current_user.id,
         Contact.contact_id == member.user_id
     ).first()
-    
+
     if not contact:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only add your contacts to a group"
         )
-    
+
     # Add the user to the group
     group_member = GroupMember(
         group_id=group_id,
         user_id=member.user_id
     )
-    
+
     db.add(group_member)
     db.commit()
-    
+
     # Return the updated group with members
     return get_group_with_members(group_id, db)
 
@@ -124,15 +124,15 @@ def get_user_groups(
     """
     # Get groups where user is the creator
     created_groups = db.query(Group).filter(Group.creator_id == current_user.id).all()
-    
+
     # Get groups where user is a member
     member_of_groups = db.query(Group).join(GroupMember).filter(
         GroupMember.user_id == current_user.id
     ).all()
-    
+
     # Combine and deduplicate
     all_groups = list({group.id: group for group in created_groups + member_of_groups}.values())
-    
+
     return all_groups
 
 @router.get("/group/{group_id}", response_model=GroupWithMembersResponse)
@@ -151,17 +151,17 @@ def get_group_detail(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Group not found"
         )
-    
+
     # Check if user is a member or creator
     is_creator = group.creator_id == current_user.id
     is_member = any(member.user.id == current_user.id for member in group.members)
-    
+
     if not is_creator and not is_member:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You must be a group member to view details"
         )
-    
+
     return group
 
 def get_group_with_members(group_id: int, db: Session):
@@ -169,11 +169,11 @@ def get_group_with_members(group_id: int, db: Session):
     group = db.query(Group).filter(Group.id == group_id).first()
     if not group:
         return None
-    
+
     members = db.query(GroupMember).filter(
         GroupMember.group_id == group_id
     ).all()
-    
+
     group.members = members
     return group
 
@@ -192,18 +192,18 @@ def delete_group(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Group not found"
         )
-    
+
     if group.creator_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the group creator can delete the group"
         )
-    
+
     # Delete all members first (due to foreign key constraints)
     db.query(GroupMember).filter(GroupMember.group_id == group_id).delete()
-    
+
     # Delete the group
     db.delete(group)
     db.commit()
-    
-    return {"detail": "Group successfully deleted"} 
+
+    return {"detail": "Group successfully deleted"}

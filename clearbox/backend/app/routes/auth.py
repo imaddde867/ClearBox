@@ -26,7 +26,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"
         )
-    
+
     # Check if email exists
     db_user_by_email = db.query(User).filter(User.email == user.email).first()
     if db_user_by_email:
@@ -34,7 +34,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    
+
     # Create new user
     hashed_password = get_password_hash(user.password)
     db_user = User(
@@ -44,17 +44,17 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
         full_name=user.full_name,
         is_active=True
     )
-    
+
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    
+
     # Create access token for the new user
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 # Add an alias for the signup endpoint
@@ -77,12 +77,12 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/login/email", response_model=Token)
@@ -97,12 +97,12 @@ def login_with_email(user_data: UserLogin, db: Session = Depends(get_db)):
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/profile", response_model=UserResponse)
@@ -119,4 +119,4 @@ def delete_user(current_user: User = Depends(get_current_active_user), db: Sessi
     """
     db.delete(current_user)
     db.commit()
-    return {"detail": "User successfully deleted"} 
+    return {"detail": "User successfully deleted"}

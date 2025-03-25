@@ -48,16 +48,16 @@ def setup_mqtt_client():
 def initialize_mqtt():
     """Initialize and connect to the MQTT broker (deprecated, use setup_mqtt_client instead)"""
     global mqtt_client
-    
+
     if mqtt_client is not None:
         return mqtt_client
-    
+
     # Create MQTT client
     mqtt_client = mqtt.Client(client_id=MQTT_CLIENT_ID)
     mqtt_client.on_connect = on_connect
     mqtt_client.on_disconnect = on_disconnect
     mqtt_client.on_message = on_message
-    
+
     # Connect to MQTT broker
     try:
         mqtt_client.connect(MQTT_BROKER, MQTT_PORT, MQTT_KEEPALIVE)
@@ -67,7 +67,7 @@ def initialize_mqtt():
     except Exception as e:
         logger.error(f"Failed to connect to MQTT broker: {e}")
         mqtt_client = None
-    
+
     return mqtt_client
 
 def get_mqtt_client():
@@ -115,4 +115,4 @@ def cleanup_mqtt():
     In a real implementation, this would disconnect from the MQTT broker.
     """
     logger.info("MQTT client cleanup skipped in demo mode")
-    return True 
+    return True

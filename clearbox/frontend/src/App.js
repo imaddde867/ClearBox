@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useContext, useMemo } from 'react';
-import { 
-  BrowserRouter as Router, 
-  Routes, 
-  Route, 
-  Navigate, 
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
   Link,
 } from 'react-router-dom';
 import EmojiPicker from 'emoji-picker-react';
@@ -17,21 +17,21 @@ import './App.css';
 // MessageItem component with better content handling
 const MessageItem = ({ message, currentUserId, formatTime }) => {
   const isSent = message.sender_id === currentUserId;
-  
+
   // Ensure we have proper message content - handle decryption error cases
   const displayContent = () => {
     if (!message.content) {
       return "No message content";
     }
-    
+
     // Handle decryption errors more gracefully
     if (message.content === "[Encrypted message]" || message.content.includes("Decryption error")) {
       return "Message couldn't be decrypted";
     }
-    
+
     return message.content;
   };
-  
+
   // Improved regex for detecting emojis (more comprehensive)
   const isSingleEmoji = () => {
     // Match a single emoji (including compound emojis with ZWJ, skin tone modifiers, etc.)
@@ -39,9 +39,9 @@ const MessageItem = ({ message, currentUserId, formatTime }) => {
     const emojiRegex = /^(?:\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(?:\u200D(?:\p{Emoji_Presentation}|\p{Emoji}\uFE0F))*(?:\p{Emoji_Modifier})?$/u;
     return displayContent().trim().length <= 3 && emojiRegex.test(displayContent().trim());
   };
-  
+
   const singleEmoji = isSingleEmoji();
-  
+
   return (
     <div className={`message ${isSent ? 'sent' : 'received'} ${message.failed ? 'failed' : ''} ${singleEmoji ? 'single-emoji' : ''}`}>
       <div className={`message-content ${singleEmoji ? 'emoji-content' : ''}`}>
@@ -73,20 +73,20 @@ const UserAvatar = ({ username, size = '40px' }) => {
       'linear-gradient(135deg, #FB8C00, #EF6C00)', // Orange
       'linear-gradient(135deg, #26A69A, #00897B)', // Teal
     ];
-    
+
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
-    
+
     return colors[Math.abs(hash) % colors.length];
   };
-  
+
   const initials = username ? username.charAt(0).toUpperCase() : '?';
   const background = getColor(username || '');
-  
+
   return (
-    <div 
+    <div
       className="user-avatar"
       style={{
         width: size,
@@ -104,23 +104,23 @@ const UserAvatar = ({ username, size = '40px' }) => {
 const LandingPage = () => {
   // Check if the user was redirected after deleting their account
   const [showDeletedMessage, setShowDeletedMessage] = useState(false);
-  
+
   useEffect(() => {
     // Check for the deleted parameter in the URL
     const params = new URLSearchParams(window.location.search);
     if (params.get('deleted') === 'true') {
       setShowDeletedMessage(true);
-      
+
       // Clear the parameter from the URL
       window.history.replaceState(null, '', '/');
-      
+
       // Hide the message after 5 seconds
       setTimeout(() => {
         setShowDeletedMessage(false);
       }, 5000);
     }
   }, []);
-  
+
   return (
     <div className="landing-page">
       {/* Show success message when account is deleted */}
@@ -132,7 +132,7 @@ const LandingPage = () => {
           </div>
         </div>
       )}
-      
+
       {/* Header - Sticky */}
       <header className="landing-header">
         <div className="container">
@@ -317,7 +317,7 @@ const Login = () => {
     e.preventDefault();
     setErrorMsg('');
     setIsLoading(true);
-    
+
     try {
       await login(username, password);
       // Login successful - redirect handled by auth-protected routes
@@ -336,9 +336,9 @@ const Login = () => {
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="username">Username</label>
-            <input 
-              type="text" 
-              id="username" 
+            <input
+              type="text"
+              id="username"
               placeholder="Enter your username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -347,9 +347,9 @@ const Login = () => {
           </div>
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input 
-              type="password" 
-              id="password" 
+            <input
+              type="password"
+              id="password"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -382,15 +382,15 @@ const Signup = () => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
-    
+
     // Validate GDPR consent
     if (!privacyConsent) {
       setErrorMsg('You must accept the Privacy Policy to create an account.');
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       // Include consent information in signup
       await signup(username, email, password, {
@@ -415,9 +415,9 @@ const Signup = () => {
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="username">Username</label>
-            <input 
-              type="text" 
-              id="username" 
+            <input
+              type="text"
+              id="username"
               placeholder="Choose a username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -426,9 +426,9 @@ const Signup = () => {
           </div>
           <div className="form-group">
             <label htmlFor="email">Email</label>
-            <input 
-              type="email" 
-              id="email" 
+            <input
+              type="email"
+              id="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -437,35 +437,35 @@ const Signup = () => {
           </div>
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input 
-              type="password" 
-              id="password" 
+            <input
+              type="password"
+              id="password"
               placeholder="Create a password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-          
+
           {/* GDPR Consent Checkboxes */}
           <div className="form-group gdpr-consent">
             <div className="consent-checkbox">
-              <input 
-                type="checkbox" 
-                id="privacy-consent" 
+              <input
+                type="checkbox"
+                id="privacy-consent"
                 checked={privacyConsent}
                 onChange={(e) => setPrivacyConsent(e.target.checked)}
               />
               <label htmlFor="privacy-consent">
-                I have read and agree to the <a href="/privacy-policy" target="_blank">Privacy Policy</a>. 
+                I have read and agree to the <a href="/privacy-policy" target="_blank">Privacy Policy</a>.
                 We collect your data to provide and improve our services. *
               </label>
             </div>
             <p className="consent-note">* Required field</p>
           </div>
-          
-          <button 
-            type="submit" 
+
+          <button
+            type="submit"
             className="button"
             disabled={isLoading}
           >
@@ -482,11 +482,11 @@ const Signup = () => {
 
 const Dashboard = () => {
   const { currentUser, logout, updateProfile } = useAuth();
-  const { 
-    contacts, 
-    contactRequests, 
-    searchResults, 
-    loading: contactsLoading, 
+  const {
+    contacts,
+    contactRequests,
+    searchResults,
+    loading: contactsLoading,
     error: contactsError,
     searchUsers,
     sendContactRequest,
@@ -497,18 +497,18 @@ const Dashboard = () => {
     refreshRequests,
     refreshSentRequests
   } = useContacts();
-  
-  const { 
-    messages, 
-    activeChat, 
-    loading: messagesLoading, 
+
+  const {
+    messages,
+    activeChat,
+    loading: messagesLoading,
     error: messagesError,
     setActiveChat,
     sendMessage,
     refreshMessages,
     isConnected
   } = useMessages();
-  
+
   const {
     notifications,
     unreadCount,
@@ -530,7 +530,7 @@ const Dashboard = () => {
   const emojiButtonRef = useRef(null);
   const [notification, setNotification] = useState(null);
   const messageListRef = useRef(null);
-  
+
   // Add missing variables for the profile section
   const [profileSuccess, setProfileSuccess] = useState('');
   const [profileError, setProfileError] = useState('');
@@ -538,16 +538,16 @@ const Dashboard = () => {
   const [editedUsername, setEditedUsername] = useState('');
   const [editedEmail, setEditedEmail] = useState('');
   const [profile, setProfile] = useState({ username: '', email: '' });
-  
+
   // Add missing variables for emoji picker
   const [emojiSearchTerm, setEmojiSearchTerm] = useState('');
   const [activeEmojiCategory, setActiveEmojiCategory] = useState('all');
   const [filteredEmojis, setFilteredEmojis] = useState([]);
-  
+
   // For display, either use the username or extract it from email
   const displayName = currentUser?.username || (currentUser?.email ? currentUser.email.split('@')[0] : 'User');
   const updatedDisplayName = profile.username || displayName;
-  
+
   // Initialize profile data
   useEffect(() => {
     if (currentUser) {
@@ -559,11 +559,11 @@ const Dashboard = () => {
       setEditedEmail(currentUser.email || '');
     }
   }, [currentUser]);
-  
+
   // Helper functions
   const formatMessageTime = (timestamp) => {
     if (!timestamp) return '';
-    
+
     let date;
     // Handle different timestamp formats
     if (typeof timestamp === 'string') {
@@ -573,16 +573,16 @@ const Dashboard = () => {
     } else {
       return '';
     }
-    
+
     // Check if date is valid
     if (isNaN(date.getTime())) return '';
-    
+
     // Format the time
     const hours = date.getHours();
     const minutes = date.getMinutes().toString().padStart(2, '0');
     const ampm = hours >= 12 ? 'PM' : 'AM';
     const formattedHours = (hours % 12) || 12; // Convert 24h to 12h format
-    
+
     return `${formattedHours}:${minutes} ${ampm}`;
   };
 
@@ -603,7 +603,7 @@ const Dashboard = () => {
     // Create a handler specifically for real-time messages
     const handleIncomingMessage = (event) => {
       const data = event.detail;
-      
+
       // Only process actual messages (not other WebSocket events)
       if (data.type === 'message') {
         // Wait a small amount of time for the message to be processed
@@ -613,10 +613,10 @@ const Dashboard = () => {
         }, 50);
       }
     };
-    
+
     // Add event listener
     window.addEventListener('ws-message', handleIncomingMessage);
-    
+
     // Cleanup on unmount
     return () => {
       window.removeEventListener('ws-message', handleIncomingMessage);
@@ -679,7 +679,7 @@ const Dashboard = () => {
         { emoji: '🥴', name: 'Woozy Face', category: 'smileys' },
         { emoji: '🤯', name: 'Exploding Head', category: 'smileys' },
         { emoji: '🤫', name: 'Shushing Face', category: 'smileys' },
-        
+
         // People category
         { emoji: '👋', name: 'Waving Hand', category: 'people' },
         { emoji: '👍', name: 'Thumbs Up', category: 'people' },
@@ -712,7 +712,7 @@ const Dashboard = () => {
         { emoji: '🧑‍🚀', name: 'Astronaut', category: 'people' },
         { emoji: '👨‍🎤', name: 'Man Singer', category: 'people' },
         { emoji: '👩‍🎤', name: 'Woman Singer', category: 'people' },
-        
+
         // Animals category
         { emoji: '🐱', name: 'Cat Face', category: 'animals' },
         { emoji: '🐶', name: 'Dog Face', category: 'animals' },
@@ -726,7 +726,7 @@ const Dashboard = () => {
         { emoji: '🦉', name: 'Owl', category: 'animals' },
         { emoji: '🦖', name: 'T-Rex', category: 'animals' },
         { emoji: '🐙', name: 'Octopus', category: 'animals' },
-        
+
         // Food category
         { emoji: '🍕', name: 'Pizza', category: 'food' },
         { emoji: '🍰', name: 'Shortcake', category: 'food' },
@@ -740,7 +740,7 @@ const Dashboard = () => {
         { emoji: '🌮', name: 'Taco', category: 'food' },
         { emoji: '🍷', name: 'Wine Glass', category: 'food' },
         { emoji: '☕', name: 'Hot Beverage', category: 'food' },
-        
+
         // Activities category
         { emoji: '⚽', name: 'Soccer Ball', category: 'activities' },
         { emoji: '🎮', name: 'Video Game', category: 'activities' },
@@ -754,7 +754,7 @@ const Dashboard = () => {
         { emoji: '🧩', name: 'Puzzle Piece', category: 'activities' },
         { emoji: '⛷️', name: 'Skier', category: 'activities' },
         { emoji: '🏄', name: 'Person Surfing', category: 'activities' },
-        
+
         // Travel category
         { emoji: '✈️', name: 'Airplane', category: 'travel' },
         { emoji: '🏖️', name: 'Beach with Umbrella', category: 'travel' },
@@ -768,7 +768,7 @@ const Dashboard = () => {
         { emoji: '🏙️', name: 'Cityscape', category: 'travel' },
         { emoji: '🌋', name: 'Volcano', category: 'travel' },
         { emoji: '🏝️', name: 'Desert Island', category: 'travel' },
-        
+
         // Symbols category
         { emoji: '💡', name: 'Light Bulb', category: 'symbols' },
         { emoji: '💯', name: 'Hundred Points', category: 'symbols' },
@@ -801,7 +801,7 @@ const Dashboard = () => {
         { emoji: '☯️', name: 'Yin Yang', category: 'symbols' },
         { emoji: '☢️', name: 'Radioactive', category: 'symbols' },
         { emoji: '☣️', name: 'Biohazard', category: 'symbols' },
-        
+
         // Objects category
         { emoji: '📱', name: 'Mobile Phone', category: 'objects' },
         { emoji: '💻', name: 'Laptop', category: 'objects' },
@@ -835,24 +835,24 @@ const Dashboard = () => {
         { emoji: '🧫', name: 'Petri Dish', category: 'objects' },
         { emoji: '⚰️', name: 'Coffin', category: 'objects' }
       ];
-      
+
       let filteredResults = allEmojis;
-      
+
       // Filter by category if not 'all'
       if (activeEmojiCategory !== 'all') {
-        filteredResults = allEmojis.filter(emoji => 
+        filteredResults = allEmojis.filter(emoji =>
           emoji.category === activeEmojiCategory
         );
       }
-      
+
       // Filter by search term if provided
       if (emojiSearchTerm) {
         const searchLower = emojiSearchTerm.toLowerCase();
-        filteredResults = filteredResults.filter(emoji => 
+        filteredResults = filteredResults.filter(emoji =>
           emoji.name.toLowerCase().includes(searchLower)
         );
       }
-      
+
       setFilteredEmojis(filteredResults);
     }
   }, [activeEmojiCategory, emojiSearchTerm]);
@@ -864,7 +864,7 @@ const Dashboard = () => {
       const text = newMessage;
       const newText = text.slice(0, cursorPosition) + emoji + text.slice(cursorPosition);
       setNewMessage(newText);
-      
+
       // Focus back on the input
       setTimeout(() => {
         messageInputRef.current.focus();
@@ -874,7 +874,7 @@ const Dashboard = () => {
     } else {
       setNewMessage(newMessage + emoji);
     }
-    
+
     // Close the emoji picker
     setShowEmojiPicker(false);
   };
@@ -894,7 +894,7 @@ const Dashboard = () => {
     if (!notification.read) {
       markNotificationAsRead(notification.id);
     }
-    
+
     // Handle different notification types
     if (notification.type === 'message' && notification.sender_id) {
       setActiveChat(notification.sender_id);
@@ -906,7 +906,7 @@ const Dashboard = () => {
       setActiveSection('contacts');
       setShowSearch(false);
     }
-    
+
     // Close notifications dropdown
     setShowNotifications(false);
   };
@@ -921,9 +921,9 @@ const Dashboard = () => {
   // Use useMemo to memoize activeChatMessages to prevent it from changing on every render
   const activeChatMessages = useMemo(() => {
     if (!activeChat) return [];
-    
+
     const chatMessages = messages[activeChat] || [];
-    
+
     // CRITICAL: Sort messages by timestamp to ensure consistent chronological order
     // This ensures messages are ALWAYS displayed in the exact order they were sent/received
     // regardless of what order they arrived in via websockets or API
@@ -931,7 +931,7 @@ const Dashboard = () => {
       // Parse dates consistently to avoid timezone or format issues
       const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
       const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
-      
+
       // If timestamps are exactly the same (rare), use message ID as secondary sort
       if (timeA === timeB) {
         // Temp IDs always go last if timestamps match
@@ -939,16 +939,16 @@ const Dashboard = () => {
         if (b.id.toString().startsWith('temp-')) return -1;
         return a.id.localeCompare(b.id);
       }
-      
+
       return timeA - timeB;
     });
   }, [activeChat, messages]);
-  
+
   // Handle sending a message
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !activeChat) return;
-    
+
     // First check if we're authenticated
     if (!currentUser) {
       console.error("Cannot send message: Not authenticated");
@@ -963,14 +963,14 @@ const Dashboard = () => {
       }, 1500);
       return;
     }
-    
+
     // Cache the message and clear input field immediately for better UX
     const messageToSend = newMessage.trim();
     setNewMessage(''); // Clear input immediately
-    
+
     // Scroll to bottom immediately for better UX
     setTimeout(scrollToBottom, 10);
-    
+
     // Send the message with improved error handling
     sendMessage(activeChat, messageToSend)
       .then(response => {
@@ -978,10 +978,10 @@ const Dashboard = () => {
       })
       .catch(error => {
         console.error("Error sending message:", error);
-        
+
         // Show more specific error message based on the response code
         let errorMessage = 'Failed to send message. Please try again.';
-        
+
         if (error.response) {
           // Server responded with an error
           if (error.response.status === 401) {
@@ -997,7 +997,7 @@ const Dashboard = () => {
           } else if (error.response.status === 500) {
             errorMessage = 'Server error occurred while sending message. Please try again later.';
           }
-          
+
           // Use custom error message if provided by server
           if (error.response.data && error.response.data.detail) {
             errorMessage = `Failed to send message: ${error.response.data.detail}`;
@@ -1006,7 +1006,7 @@ const Dashboard = () => {
           // Request was made but no response received (network error)
           errorMessage = 'Network error. Please check your internet connection and try again.';
         }
-        
+
         // Show notification with the error message
         setNotification({
           message: errorMessage,
@@ -1020,12 +1020,12 @@ const Dashboard = () => {
   const handleSearch = (e) => {
     const query = e.target.value;
     setSearchTerm(query);
-    
+
     // If search is cleared, reset results
     if (!query.trim()) {
       return;
     }
-    
+
     if (query.length >= 2) {
       searchUsers(query);
     }
@@ -1037,7 +1037,7 @@ const Dashboard = () => {
       // Fix: Define a local contactRequestError state instead of using setError
       setContactRequestError('');
       // Remove direct setLoading calls and use the proper method from useContacts
-      
+
       const result = await sendContactRequest(userId);
       if (result && result.success) {
         // Success! No error to set.
@@ -1066,18 +1066,18 @@ const Dashboard = () => {
     e.preventDefault();
     setProfileError('');
     setProfileSuccess('');
-    
+
     try {
       await updateProfile({
         username: editedUsername,
         email: editedEmail
       });
-      
+
       setProfile({
         username: editedUsername,
         email: editedEmail
       });
-      
+
       setProfileSuccess('Profile updated successfully');
       setIsEditingProfile(false);
     } catch (error) {
@@ -1128,9 +1128,9 @@ const Dashboard = () => {
       console.log("No user data available. User may need to login.");
       return;
     }
-    
+
     console.log("Dashboard mounted with authenticated user:", currentUser.username);
-    
+
     // Load initial data with proper initial load flag
     const loadInitialData = async () => {
       try {
@@ -1140,7 +1140,7 @@ const Dashboard = () => {
         if (refreshRequests) await refreshRequests(false);
         if (refreshSentRequests) await refreshSentRequests(false);
         if (refreshNotifications) await refreshNotifications();
-        
+
         // Set the ref to true if we have contacts
         if (contacts?.length > 0) {
           initialDataLoadedRef.current = true;
@@ -1149,9 +1149,9 @@ const Dashboard = () => {
         console.error("Error loading initial data:", error);
       }
     };
-    
+
     loadInitialData();
-    
+
     // Set up a token verification interval to ensure we stay logged in
     const tokenVerificationInterval = setInterval(() => {
       // Fix: Use the correct token key
@@ -1162,7 +1162,7 @@ const Dashboard = () => {
         clearInterval(tokenVerificationInterval);
         return;
       }
-      
+
       // Verify token is still valid by making a lightweight API call
       api.get('/profile')
         .catch(error => {
@@ -1174,7 +1174,7 @@ const Dashboard = () => {
           }
         });
     }, 60000); // Check every minute
-    
+
     // Clean up interval on unmount
     return () => {
       clearInterval(tokenVerificationInterval);
@@ -1186,7 +1186,7 @@ const Dashboard = () => {
     if (!activeChat || !currentUser) {
       return;
     }
-    
+
     // Check for properly authenticated
     const token = localStorage.getItem('token');
     if (!token || !currentUser) {
@@ -1194,14 +1194,14 @@ const Dashboard = () => {
       setConnectionError(true);
       return;
     }
-    
+
     refreshMessages(activeChat);
   }, [activeChat, currentUser, setConnectionError]);
 
   // Add notification display rendering if it doesn't exist
   const renderNotification = () => {
     if (!notification) return null;
-    
+
     return (
       <div className={`notification ${notification.type}`}>
         <span>{notification.message}</span>
@@ -1239,17 +1239,17 @@ const Dashboard = () => {
       setShowDeleteConfirm(true);
       return;
     }
-    
+
     setDeleteAccountLoading(true);
     setDeleteAccountError('');
-    
+
     try {
       // Call the delete account endpoint
       await api.delete('/user');
-      
+
       // Logout the user
       logout();
-      
+
       // Redirect to home with a message
       window.location.href = '/?deleted=true';
     } catch (error) {
@@ -1268,14 +1268,14 @@ const Dashboard = () => {
   // Setup WebSocket connection for real-time online status
   useEffect(() => {
     console.log("Setting up WebSocket connection for presence tracking");
-    
+
     // Establish WebSocket connection to backend with proper protocol
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const socket = new WebSocket(`${protocol}//${window.location.hostname}:8000/ws/presence/`);
-    
+
     socket.onopen = () => {
       console.log("WebSocket connection established for presence tracking");
-      
+
       // Send current user's online status immediately when connected
       if (currentUser) {
         const statusMessage = JSON.stringify({
@@ -1286,12 +1286,12 @@ const Dashboard = () => {
         socket.send(statusMessage);
       }
     };
-    
+
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         console.log("Received presence update:", data);
-        
+
         // Update online status based on received data
         if (data.userId && data.hasOwnProperty('online')) {
           console.log(`Setting user ${data.userId} online status to ${data.online}`);
@@ -1304,18 +1304,18 @@ const Dashboard = () => {
         console.error("Error processing presence data:", error);
       }
     };
-    
+
     // Set up a ping interval to keep the connection alive
     const pingInterval = setInterval(() => {
       if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ type: 'ping' }));
       }
     }, 30000); // ping every 30 seconds
-    
+
     // Clean up WebSocket connection when component unmounts
     return () => {
       clearInterval(pingInterval);
-      
+
       // Send offline status before closing
       if (socket.readyState === WebSocket.OPEN && currentUser) {
         socket.send(JSON.stringify({
@@ -1335,13 +1335,13 @@ const Dashboard = () => {
   // Add filteredSearchResults using useMemo (after other state declarations)
   const filteredSearchResults = useMemo(() => {
     if (!searchResults || !searchTerm) return searchResults;
-    
+
     const normalizedSearchTerm = searchTerm.toLowerCase().trim();
-    
+
     return searchResults.filter(user => {
       const username = (user.username || '').toLowerCase();
       const userId = (user.id || '').toString().toLowerCase();
-      
+
       return username.includes(normalizedSearchTerm) || userId.includes(normalizedSearchTerm);
     });
   }, [searchResults, searchTerm]);
@@ -1353,12 +1353,12 @@ const Dashboard = () => {
   useEffect(() => {
     // Only count unread messages if we have messages and they are in an array
     if (messages && Array.isArray(messages)) {
-      const count = messages.filter(msg => 
-        !msg.read && 
-        msg.to_user === currentUser.id && 
+      const count = messages.filter(msg =>
+        !msg.read &&
+        msg.to_user === currentUser.id &&
         (!activeChat || msg.from_user !== activeChat)
       ).length;
-      
+
       setUnreadMessages(count);
     } else {
       // If messages is not an array, set count to 0
@@ -1385,14 +1385,14 @@ const Dashboard = () => {
   // Handle user online status through WebSocket
   useEffect(() => {
     if (!currentUser) return;
-    
+
     // WebSocket connection is handled in MessagesContext
     // Here we just listen for and process presence updates
     const handleWebSocketMessage = (event) => {
       try {
         // Access data from the CustomEvent's detail property
         const data = event.detail;
-        
+
         // Handle presence updates
         if (data.type === 'presence') {
           const { userId, online } = data;
@@ -1405,10 +1405,10 @@ const Dashboard = () => {
         console.error('Error processing presence data:', error);
       }
     };
-    
+
     // Listen for messages from the WebSocket connection in MessagesContext
     window.addEventListener('ws-message', handleWebSocketMessage);
-    
+
     // Clean up
     return () => {
       window.removeEventListener('ws-message', handleWebSocketMessage);
@@ -1421,7 +1421,7 @@ const Dashboard = () => {
       {connectionError && (
         <div className="connection-error-banner">
           <span>Connection error. Please check your internet connection or try logging in again.</span>
-          <button 
+          <button
             className="button-small"
             onClick={() => window.location.href = '/login'}
           >
@@ -1429,7 +1429,7 @@ const Dashboard = () => {
           </button>
         </div>
       )}
-      
+
       {/* Main content */}
       <header className="dashboard-header">
         <h2>ClearBox</h2>
@@ -1442,7 +1442,7 @@ const Dashboard = () => {
           <button onClick={handleLogout} className="button-outline">Logout</button>
         </div>
       </header>
-      
+
       {/* Notifications dropdown */}
       {showNotifications && (
         <div className="notifications-dropdown">
@@ -1457,8 +1457,8 @@ const Dashboard = () => {
           <div className="notifications-list">
             {notifications?.length > 0 ? (
               notifications.map(notification => (
-                <div 
-                  key={notification.id} 
+                <div
+                  key={notification.id}
                   className={`notification-item ${!notification.read ? 'unread' : ''}`}
                   onClick={() => handleNotificationClick(notification)}
                 >
@@ -1479,7 +1479,7 @@ const Dashboard = () => {
           </div>
         </div>
       )}
-      
+
       <div className="dashboard-layout">
         <nav className="sidebar">
           <div className="sidebar-header">
@@ -1505,7 +1505,7 @@ const Dashboard = () => {
             </li>
           </ul>
         </nav>
-        
+
         <main className="main-content">
           {activeSection === 'messages' && (
             <div className="messages-section">
@@ -1514,8 +1514,8 @@ const Dashboard = () => {
                   <div className="section-header">
                     <h3>Contacts</h3>
                     <div className="section-actions">
-                      <button 
-                        className="icon-button" 
+                      <button
+                        className="icon-button"
                         title="Search in contacts"
                         onClick={() => {
                           // Create a state for contact search if it doesn't exist yet
@@ -1539,11 +1539,11 @@ const Dashboard = () => {
                                 }
                               });
                             });
-                            
+
                             // Insert at the top of contacts list
                             const contactsList = document.querySelector('.contacts-list');
                             contactsList.insertBefore(searchInput, contactsList.firstChild);
-                            
+
                             // Focus the input
                             searchInput.focus();
                           } else {
@@ -1569,14 +1569,14 @@ const Dashboard = () => {
                       </button>
                     </div>
                   </div>
-                  
+
                   {/* Contacts list */}
                   <div className="contacts-list">
                     {isContactsLoading() ? (
                       <div className="loading-indicator">Loading contacts...</div>
                     ) : contacts && contacts.length > 0 ? (
                       contacts.map(contact => (
-                        <div 
+                        <div
                           className={`contact-item ${activeChat === contact.id ? 'active' : ''}`}
                           key={contact.id}
                           onClick={() => setActiveChat(contact.id)}
@@ -1594,8 +1594,8 @@ const Dashboard = () => {
                     ) : (
                       <div className="no-contacts">
                         <p>No contacts found</p>
-                        <button 
-                          className="search-contacts-btn" 
+                        <button
+                          className="search-contacts-btn"
                           onClick={() => {
                             setActiveSection('contacts');
                             setShowSearch(true);
@@ -1607,7 +1607,7 @@ const Dashboard = () => {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="chat-area">
                   {activeChat ? (
                     <>
@@ -1627,7 +1627,7 @@ const Dashboard = () => {
                           </button>
                         </div>
                       </div>
-                      
+
                       <div className="messages-container">
                         {messagesLoading ? (
                           <div className="loading-indicator">Loading messages...</div>
@@ -1635,7 +1635,7 @@ const Dashboard = () => {
                           <div className="message-list" ref={messageListRef}>
                             {activeChatMessages
                               .slice() // Create a copy to avoid mutating the original array
-                              .sort((a, b) => { 
+                              .sort((a, b) => {
                                 // CRITICAL: Sort by timestamp, oldest first (newer messages at bottom)
                                 // This sort is the final safeguard to ensure messages are always displayed chronologically
                                 // Messages should already be sorted in MessagesContext but this ensures proper display order
@@ -1644,11 +1644,11 @@ const Dashboard = () => {
                                 return timeA - timeB;
                               })
                               .map((message) => (
-                                <MessageItem 
-                                  key={message.id} 
-                                  message={message} 
-                                  currentUserId={currentUser.id} 
-                                  formatTime={formatMessageTime} 
+                                <MessageItem
+                                  key={message.id}
+                                  message={message}
+                                  currentUserId={currentUser.id}
+                                  formatTime={formatMessageTime}
                                 />
                               ))}
                           </div>
@@ -1661,9 +1661,9 @@ const Dashboard = () => {
                           </div>
                         )}
                       </div>
-                      
-                      <form 
-                        className="message-form" 
+
+                      <form
+                        className="message-form"
                         onSubmit={handleSendMessage}
                       >
                         <button
@@ -1680,72 +1680,72 @@ const Dashboard = () => {
                           <div className="emoji-picker-container" ref={emojiPickerRef}>
                             <div className="custom-emoji-picker">
                               <div className="emoji-search">
-                                <input 
-                                  type="text" 
-                                  placeholder="Search emoji..." 
+                                <input
+                                  type="text"
+                                  placeholder="Search emoji..."
                                   autoFocus
                                   value={emojiSearchTerm}
                                   onChange={(e) => setEmojiSearchTerm(e.target.value)}
                                 />
                               </div>
                               <div className="emoji-categories">
-                                <button 
+                                <button
                                   className={`emoji-category ${activeEmojiCategory === 'all' ? 'active' : ''}`}
                                   onClick={() => setActiveEmojiCategory('all')}
                                   title="All Emojis"
                                 >
                                   😊
                                 </button>
-                                <button 
+                                <button
                                   className={`emoji-category ${activeEmojiCategory === 'smileys' ? 'active' : ''}`}
                                   onClick={() => setActiveEmojiCategory('smileys')}
                                   title="Smileys & Emotion"
                                 >
                                   😀
                                 </button>
-                                <button 
+                                <button
                                   className={`emoji-category ${activeEmojiCategory === 'people' ? 'active' : ''}`}
                                   onClick={() => setActiveEmojiCategory('people')}
                                   title="People & Body"
                                 >
                                   👋
                                 </button>
-                                <button 
+                                <button
                                   className={`emoji-category ${activeEmojiCategory === 'animals' ? 'active' : ''}`}
                                   onClick={() => setActiveEmojiCategory('animals')}
                                   title="Animals & Nature"
                                 >
                                   🐱
                                 </button>
-                                <button 
+                                <button
                                   className={`emoji-category ${activeEmojiCategory === 'food' ? 'active' : ''}`}
                                   onClick={() => setActiveEmojiCategory('food')}
                                   title="Food & Drink"
                                 >
                                   🍔
                                 </button>
-                                <button 
+                                <button
                                   className={`emoji-category ${activeEmojiCategory === 'activities' ? 'active' : ''}`}
                                   onClick={() => setActiveEmojiCategory('activities')}
                                   title="Activities"
                                 >
                                   ⚽
                                 </button>
-                                <button 
+                                <button
                                   className={`emoji-category ${activeEmojiCategory === 'travel' ? 'active' : ''}`}
                                   onClick={() => setActiveEmojiCategory('travel')}
                                   title="Travel & Places"
                                 >
                                   ✈️
                                 </button>
-                                <button 
+                                <button
                                   className={`emoji-category ${activeEmojiCategory === 'symbols' ? 'active' : ''}`}
                                   onClick={() => setActiveEmojiCategory('symbols')}
                                   title="Symbols"
                                 >
                                   💡
                                 </button>
-                                <button 
+                                <button
                                   className={`emoji-category ${activeEmojiCategory === 'objects' ? 'active' : ''}`}
                                   onClick={() => setActiveEmojiCategory('objects')}
                                   title="Objects"
@@ -1756,9 +1756,9 @@ const Dashboard = () => {
                               <div className="emoji-list">
                                 {filteredEmojis.length > 0 ? (
                                   filteredEmojis.map((emoji, index) => (
-                                    <button 
-                                      key={index} 
-                                      className="emoji-item" 
+                                    <button
+                                      key={index}
+                                      className="emoji-item"
                                       onClick={() => {
                                         onEmojiClick({emoji: emoji.emoji});
                                         setEmojiSearchTerm(''); // Clear search after selection
@@ -1789,8 +1789,8 @@ const Dashboard = () => {
                             handleKeyboardShortcut(e);
                           }}
                         />
-                        <button 
-                          type="submit" 
+                        <button
+                          type="submit"
                           disabled={!newMessage.trim()}
                         >
                           Send
@@ -1801,8 +1801,8 @@ const Dashboard = () => {
                     <div className="empty-chat">
                       <p>Select a contact from the list to start a secure conversation</p>
                       {contacts && contacts.length > 0 ? (
-                        <button 
-                          className="search-contacts-btn" 
+                        <button
+                          className="search-contacts-btn"
                           onClick={() => {
                             setShowSearch(true);
                             setTimeout(() => document.querySelector('.search-bar input')?.focus(), 100);
@@ -1811,8 +1811,8 @@ const Dashboard = () => {
                           Find Contacts
                         </button>
                       ) : (
-                        <button 
-                          className="search-contacts-btn" 
+                        <button
+                          className="search-contacts-btn"
                           onClick={() => {
                             setShowSearch(true);
                             setTimeout(() => document.querySelector('.search-bar input')?.focus(), 100);
@@ -1827,26 +1827,26 @@ const Dashboard = () => {
               </div>
             </div>
           )}
-          
+
           {activeSection === 'contacts' && (
             <div className="contacts-section">
               <div className="tabs">
-                <button 
-                  className={`tab ${!showSearch ? 'active' : ''}`} 
+                <button
+                  className={`tab ${!showSearch ? 'active' : ''}`}
                   onClick={() => setShowSearch(false)}
                 >
                   <span className="tab-icon">👥</span>
                   <span className="tab-text">My Contacts</span>
                 </button>
-                <button 
-                  className={`tab ${showSearch ? 'active' : ''}`} 
+                <button
+                  className={`tab ${showSearch ? 'active' : ''}`}
                   onClick={() => setShowSearch(true)}
                 >
                   <span className="tab-icon">🔍</span>
                   <span className="tab-text">Find Users</span>
                 </button>
               </div>
-              
+
               {showSearch ? (
                 <div className="search-users-section">
                   <div className="search-bar">
@@ -1858,12 +1858,12 @@ const Dashboard = () => {
                       autoFocus
                     />
                   </div>
-                  
+
                   {/* Show error message if there is one */}
                   {contactRequestError && (
                     <div className="error-message">{contactRequestError}</div>
                   )}
-                  
+
                   <div className="search-results-container">
                     {searchLoading ? (
                       <div className="loading-indicator">Searching...</div>
@@ -1875,7 +1875,7 @@ const Dashboard = () => {
                               <h4>{user.username}</h4>
                               <p>{user.email}</p>
                             </div>
-                            <button 
+                            <button
                               className="button-small"
                               onClick={() => handleSendContactRequest(user.id)}
                               disabled={false}
@@ -1913,14 +1913,14 @@ const Dashboard = () => {
                               <p>{request.from_user?.email || 'No email available'}</p>
                             </div>
                             <div className="request-actions">
-                              <button 
+                              <button
                                 onClick={async () => {
                                   try {
                                     setAcceptRequestError('');
                                     setAcceptRequestSuccess('');
                                     // Set loading for this specific request
                                     setAcceptingRequest(request.id);
-                                    
+
                                     const result = await acceptContactRequest(request.id);
                                     if (result && result.success) {
                                       setAcceptRequestSuccess('Contact request accepted successfully!');
@@ -1945,14 +1945,14 @@ const Dashboard = () => {
                               >
                                 Accept
                               </button>
-                              <button 
+                              <button
                                 onClick={async () => {
                                   try {
                                     setAcceptRequestError('');
                                     setAcceptRequestSuccess('');
                                     // Set loading for this specific request
                                     setRejectingRequest(request.id);
-                                    
+
                                     const result = await rejectContactRequest(request.id);
                                     if (result && result.success) {
                                       setAcceptRequestSuccess('Contact request rejected');
@@ -1986,7 +1986,7 @@ const Dashboard = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="my-contacts-section">
                     <h3>My Contacts</h3>
                     <div className="contacts-grid">
@@ -2001,7 +2001,7 @@ const Dashboard = () => {
                                 <span className="status-text">{isUserOnline(contact.id) ? 'Online' : 'Offline'}</span>
                               </div>
                             </div>
-                            <button 
+                            <button
                               className="button-small"
                               onClick={() => {
                                 setActiveChat(contact.id);
@@ -2019,7 +2019,7 @@ const Dashboard = () => {
                         <div className="no-contacts-message">
                           <p>Your contacts list is empty.</p>
                           <p className="contact-tip">Start by finding and adding users in the "Find Users" tab.</p>
-                          <button 
+                          <button
                             className="find-users-btn"
                             onClick={() => setShowSearch(true)}
                           >
@@ -2033,13 +2033,13 @@ const Dashboard = () => {
               )}
             </div>
           )}
-          
+
           {activeSection === 'profile' && (
             <div className="profile-section">
               <h3>Your Profile</h3>
               {profileSuccess && <div className="success-message">{profileSuccess}</div>}
               {profileError && <div className="error-message">{profileError}</div>}
-              
+
               {isEditingProfile ? (
                 <form className="profile-edit-form" onSubmit={handleProfileUpdate}>
                   <div className="form-group">
@@ -2064,8 +2064,8 @@ const Dashboard = () => {
                   </div>
                   <div className="profile-actions">
                     <button type="submit" className="button">Save Changes</button>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="button-outline"
                       onClick={() => setIsEditingProfile(false)}
                     >
@@ -2085,14 +2085,14 @@ const Dashboard = () => {
                       <p>{profile.email}</p>
                     </div>
                     <div className="profile-actions">
-                      <button 
+                      <button
                         className="button-outline"
                         onClick={handleEditProfileClick}
                       >
                         Edit Profile
                       </button>
                       <div className="delete-account-container">
-                        <button 
+                        <button
                           className={`button-outline danger ${showDeleteConfirm ? 'confirm' : ''}`}
                           onClick={handleDeleteAccount}
                           disabled={deleteAccountLoading}
@@ -2100,7 +2100,7 @@ const Dashboard = () => {
                           {deleteAccountLoading ? 'Deleting...' : (showDeleteConfirm ? 'Confirm Delete' : 'Delete Account')}
                         </button>
                         {showDeleteConfirm && (
-                          <button 
+                          <button
                             className="button-outline cancel"
                             onClick={() => setShowDeleteConfirm(false)}
                           >
@@ -2113,18 +2113,18 @@ const Dashboard = () => {
                   </div>
                 </>
               )}
-              
+
               {/* Data Export Section */}
               <div className="data-export-section">
                 <h4>Your Data</h4>
-                
+
                 <div className="data-export-options">
                   <div className="export-option">
                     <div className="export-description">
                       <h5>Download Your Data</h5>
                       <p>Get a copy of all your personal data in JSON format</p>
                     </div>
-                    <button 
+                    <button
                       className="button-outline export-button"
                       onClick={() => {
                         // Mock data export function - in a real app, this would call an API endpoint
@@ -2138,7 +2138,7 @@ const Dashboard = () => {
                           messages: Object.values(messages).flat(),
                           contacts: contacts
                         };
-                        
+
                         // Create a JSON blob and trigger download
                         const blob = new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' });
                         const url = URL.createObjectURL(blob);
@@ -2149,7 +2149,7 @@ const Dashboard = () => {
                         a.click();
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
-                        
+
                         setProfileSuccess('Your data export has been generated');
                         setTimeout(() => setProfileSuccess(''), 3000);
                       }}
@@ -2158,7 +2158,7 @@ const Dashboard = () => {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="gdpr-info">
                   <h5>Your Rights Under GDPR</h5>
                   <ul>
@@ -2185,12 +2185,12 @@ const PrivacyPolicy = () => {
       <div className="privacy-policy-content">
         <h1>Privacy Policy</h1>
         <p className="last-updated">Last Updated: {new Date().toISOString().slice(0, 10)}</p>
-        
+
         <section>
           <h2>1. Introduction</h2>
           <p>
-            Welcome to ClearBox ("we," "our," or "us"). We are committed to protecting your privacy and 
-            personal data. This Privacy Policy explains how we collect, use, and safeguard your information 
+            Welcome to ClearBox ("we," "our," or "us"). We are committed to protecting your privacy and
+            personal data. This Privacy Policy explains how we collect, use, and safeguard your information
             when you use our messaging application and services.
           </p>
           <p>
@@ -2198,7 +2198,7 @@ const PrivacyPolicy = () => {
             We collect and process personal data in compliance with the General Data Protection Regulation (GDPR).
           </p>
         </section>
-        
+
         <section>
           <h2>2. Data Controller</h2>
           <p>
@@ -2208,11 +2208,11 @@ const PrivacyPolicy = () => {
             Email: <a href="mailto:contact@clearbox.live">contact@clearbox.live</a>
           </p>
         </section>
-        
+
         <section>
           <h2>3. Information We Collect</h2>
           <p>We collect the following types of information:</p>
-          
+
           <h3>3.1 Information You Provide</h3>
           <ul>
             <li>Account Information: Username and email address when you register</li>
@@ -2220,7 +2220,7 @@ const PrivacyPolicy = () => {
             <li>Communications: Messages and content you send through our platform</li>
             <li>Contact Information: Details about contacts you add to your network</li>
           </ul>
-          
+
           <h3>3.2 Information Collected Automatically</h3>
           <ul>
             <li>Device Information: IP address, device type, operating system</li>
@@ -2228,7 +2228,7 @@ const PrivacyPolicy = () => {
             <li>Connection Information: Login times, session duration, connection status</li>
           </ul>
         </section>
-        
+
         <section>
           <h2>4. How We Use Your Information</h2>
           <p>We use your personal data for the following purposes:</p>
@@ -2242,7 +2242,7 @@ const PrivacyPolicy = () => {
             <li>To comply with legal obligations</li>
           </ul>
         </section>
-        
+
         <section>
           <h2>5. Legal Basis for Processing</h2>
           <p>We process your personal data based on the following legal grounds:</p>
@@ -2253,37 +2253,37 @@ const PrivacyPolicy = () => {
             <li>Compliance with legal obligations</li>
           </ul>
         </section>
-        
+
         <section>
           <h2>6. Data Retention</h2>
           <p>
-            We retain your personal data only for as long as necessary to fulfill the purposes outlined 
+            We retain your personal data only for as long as necessary to fulfill the purposes outlined
             in this Privacy Policy, unless a longer retention period is required or permitted by law.
           </p>
           <p>
-            Message content is stored on our servers only until delivery to the recipient's device, after 
+            Message content is stored on our servers only until delivery to the recipient's device, after
             which it may be deleted from our servers but retained on user devices as part of message history.
           </p>
           <p>
-            Account information is retained as long as you maintain an active account. Upon account deletion, 
+            Account information is retained as long as you maintain an active account. Upon account deletion,
             personal data will be removed or anonymized within 30 days, except where retention is required by law.
           </p>
         </section>
-        
+
         <section>
           <h2>7. Data Security</h2>
           <p>
-            We implement appropriate technical and organizational measures to protect your personal data, 
-            including end-to-end encryption for messages, secure authentication mechanisms, and regular 
+            We implement appropriate technical and organizational measures to protect your personal data,
+            including end-to-end encryption for messages, secure authentication mechanisms, and regular
             security assessments.
           </p>
           <p>
-            Despite our efforts, no method of transmission over the Internet or electronic storage is 
-            100% secure. While we strive to use commercially acceptable means to protect your personal 
+            Despite our efforts, no method of transmission over the Internet or electronic storage is
+            100% secure. While we strive to use commercially acceptable means to protect your personal
             data, we cannot guarantee its absolute security.
           </p>
         </section>
-        
+
         <section>
           <h2>8. Data Sharing and Third Parties</h2>
           <p>We may share your information with:</p>
@@ -2293,20 +2293,20 @@ const PrivacyPolicy = () => {
             <li>Business partners, only with your explicit consent</li>
           </ul>
           <p>
-            All third-party service providers are contractually obligated to use your data only for 
+            All third-party service providers are contractually obligated to use your data only for
             providing services to us and to maintain appropriate security measures.
           </p>
         </section>
-        
+
         <section>
           <h2>9. International Data Transfers</h2>
           <p>
-            Your personal data may be processed in countries outside the European Economic Area (EEA). 
-            When transferring data internationally, we ensure appropriate safeguards are in place through 
+            Your personal data may be processed in countries outside the European Economic Area (EEA).
+            When transferring data internationally, we ensure appropriate safeguards are in place through
             standard contractual clauses or other valid transfer mechanisms.
           </p>
         </section>
-        
+
         <section>
           <h2>10. Your Data Protection Rights</h2>
           <p>Under the GDPR, you have the following rights:</p>
@@ -2319,52 +2319,52 @@ const PrivacyPolicy = () => {
             <li>Right to Withdraw Consent: Withdraw consent at any time where we rely on consent</li>
           </ul>
           <p>
-            To exercise these rights, please contact us at <a href="mailto:contact@clearbox.live">contact@clearbox.live</a>. 
+            To exercise these rights, please contact us at <a href="mailto:contact@clearbox.live">contact@clearbox.live</a>.
             We will respond to your request within 30 days.
           </p>
         </section>
-        
+
         <section>
           <h2>11. Cookies and Tracking Technologies</h2>
           <p>
-            We use cookies and similar tracking technologies to track activity on our service and hold certain information. 
+            We use cookies and similar tracking technologies to track activity on our service and hold certain information.
             Cookies are files with small amounts of data which may include an anonymous unique identifier.
           </p>
           <p>
-            You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. 
+            You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent.
             However, if you do not accept cookies, you may not be able to use some portions of our service.
           </p>
         </section>
-        
+
         <section>
           <h2>12. Children's Privacy</h2>
           <p>
-            Our service is not intended for use by children under the age of 16. We do not knowingly collect 
-            personal data from children under 16. If you are a parent or guardian and you are aware that your 
+            Our service is not intended for use by children under the age of 16. We do not knowingly collect
+            personal data from children under 16. If you are a parent or guardian and you are aware that your
             child has provided us with personal data, please contact us so that we can take necessary actions.
           </p>
         </section>
-        
+
         <section>
           <h2>13. Changes to This Privacy Policy</h2>
           <p>
-            We may update our Privacy Policy from time to time. We will notify you of any changes by posting 
+            We may update our Privacy Policy from time to time. We will notify you of any changes by posting
             the new Privacy Policy on this page and updating the "Last Updated" date.
           </p>
           <p>
-            You are advised to review this Privacy Policy periodically for any changes. Changes to this 
+            You are advised to review this Privacy Policy periodically for any changes. Changes to this
             Privacy Policy are effective when they are posted on this page.
           </p>
         </section>
-        
+
         <section>
           <h2>14. Data Protection Authority</h2>
           <p>
-            If you have concerns about our processing of your personal data that we are not able to resolve, 
+            If you have concerns about our processing of your personal data that we are not able to resolve,
             you have the right to lodge a complaint with the data protection authority in your jurisdiction.
           </p>
         </section>
-        
+
         <div className="privacy-policy-footer">
           <Link to="/login" className="button">Return to Login</Link>
           <Link to="/" className="button-outline">Back to Home</Link>
@@ -2381,7 +2381,7 @@ const TermsOfService = () => {
       <div className="terms-content">
         <h1>Terms of Service</h1>
         <p className="last-updated">Last Updated: {new Date().toISOString().slice(0, 10)}</p>
-        
+
         <section>
           <h2>1. Introduction</h2>
           <p>
@@ -2394,7 +2394,7 @@ const TermsOfService = () => {
             agreement between you and ClearBox.
           </p>
         </section>
-        
+
         <section>
           <h2>2. Definitions</h2>
           <p>Throughout these Terms, we use certain terms with specific meanings:</p>
@@ -2405,7 +2405,7 @@ const TermsOfService = () => {
             <li><strong>"Personal Data"</strong> means information relating to an identified or identifiable natural person.</li>
           </ul>
         </section>
-        
+
         <section>
           <h2>3. Account Registration and Eligibility</h2>
           <p>
@@ -2422,7 +2422,7 @@ const TermsOfService = () => {
             use of your account.
           </p>
         </section>
-        
+
         <section>
           <h2>4. Privacy and Data Protection</h2>
           <p>
@@ -2435,7 +2435,7 @@ const TermsOfService = () => {
             As a user, you have specific rights regarding your personal data, as outlined in our Privacy Policy.
           </p>
         </section>
-        
+
         <section>
           <h2>5. Service Usage Rules</h2>
           <p>When using ClearBox, you agree not to:</p>
@@ -2453,7 +2453,7 @@ const TermsOfService = () => {
             We reserve the right to remove any content or suspend any account that violates these rules.
           </p>
         </section>
-        
+
         <section>
           <h2>6. Intellectual Property Rights</h2>
           <p>
@@ -2467,7 +2467,7 @@ const TermsOfService = () => {
             providing and improving our services.
           </p>
         </section>
-        
+
         <section>
           <h2>7. Termination</h2>
           <p>
@@ -2484,7 +2484,7 @@ const TermsOfService = () => {
             provisions, warranty disclaimers, indemnity, and limitations of liability.
           </p>
         </section>
-        
+
         <section>
           <h2>8. Disclaimer of Warranties</h2>
           <p>
@@ -2498,7 +2498,7 @@ const TermsOfService = () => {
             communication method is 100% secure, and we cannot guarantee absolute security.
           </p>
         </section>
-        
+
         <section>
           <h2>9. Limitation of Liability</h2>
           <p>
@@ -2512,7 +2512,7 @@ const TermsOfService = () => {
             is not permitted, our liability shall be limited to the fullest extent allowed.
           </p>
         </section>
-        
+
         <section>
           <h2>10. Changes to Terms</h2>
           <p>
@@ -2525,7 +2525,7 @@ const TermsOfService = () => {
             top of this page indicates when these Terms were last revised.
           </p>
         </section>
-        
+
         <section>
           <h2>11. Governing Law</h2>
           <p>
@@ -2537,7 +2537,7 @@ const TermsOfService = () => {
             jurisdiction of the courts in Finland.
           </p>
         </section>
-        
+
         <section>
           <h2>12. Contact Information</h2>
           <p>
@@ -2546,7 +2546,7 @@ const TermsOfService = () => {
             Email: <a href="mailto:contact@clearbox.live">contact@clearbox.live</a>
           </p>
         </section>
-        
+
         <div className="terms-footer">
           <Link to="/login" className="button">Return to Login</Link>
           <Link to="/" className="button-outline">Back to Home</Link>
@@ -2568,7 +2568,7 @@ const About = () => {
           <h1>About the Creator</h1>
         </div>
       </header>
-      
+
       <section className="about-hero">
         <div className="container">
           <div className="about-profile">
@@ -2598,23 +2598,23 @@ const About = () => {
           </div>
         </div>
       </section>
-      
+
       <section className="about-content">
         <div className="container">
           <div className="about-intro">
             <h3>Meet the Mind Behind ClearBox</h3>
             <p>
-              Hello! I'm Imad, a motivated Data Engineering & AI student passionate about building scalable, 
-              secure, and privacy-focused applications. ClearBox was born from my commitment to creating 
+              Hello! I'm Imad, a motivated Data Engineering & AI student passionate about building scalable,
+              secure, and privacy-focused applications. ClearBox was born from my commitment to creating
               communication systems that respect user privacy while delivering a seamless experience.
             </p>
             <p>
-              With a background in data engineering and a focus on security, I've designed ClearBox to 
-              demonstrate how modern applications can be both user-friendly and compliant with the highest 
+              With a background in data engineering and a focus on security, I've designed ClearBox to
+              demonstrate how modern applications can be both user-friendly and compliant with the highest
               privacy standards like GDPR.
             </p>
           </div>
-          
+
           <div className="about-expertise">
             <h3>Technical Expertise</h3>
             <div className="expertise-grid">
@@ -2630,7 +2630,7 @@ const About = () => {
                   <li><span className="skill-tag">Flask</span></li>
                 </ul>
               </div>
-              
+
               <div className="expertise-category">
                 <h4>Real-Time Systems</h4>
                 <ul className="skills-list">
@@ -2640,7 +2640,7 @@ const About = () => {
                   <li><span className="skill-tag">InfluxDB</span></li>
                 </ul>
               </div>
-              
+
               <div className="expertise-category">
                 <h4>Databases & Cloud</h4>
                 <ul className="skills-list">
@@ -2653,7 +2653,7 @@ const About = () => {
                   <li><span className="skill-tag">AWS</span></li>
                 </ul>
               </div>
-              
+
               <div className="expertise-category">
                 <h4>AI/ML & Analytics</h4>
                 <ul className="skills-list">
@@ -2663,7 +2663,7 @@ const About = () => {
                   <li><span className="skill-tag">Grafana</span></li>
                 </ul>
               </div>
-              
+
               <div className="expertise-category">
                 <h4>DevOps</h4>
                 <ul className="skills-list">
@@ -2674,42 +2674,42 @@ const About = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="about-projects">
             <h3>Featured Projects</h3>
-            
+
             <div className="project-cards">
               <div className="project-card">
                 <div className="project-icon">🚢</div>
                 <h4>Maritime Vessel Tracking System</h4>
                 <p>
-                  Engineered a real-time pipeline processing 10,000+ vessel positions daily, achieving 90% ML-based 
+                  Engineered a real-time pipeline processing 10,000+ vessel positions daily, achieving 90% ML-based
                   trajectory accuracy. Optimized algorithms to slash processing time, ideal for transportation solutions.
                 </p>
               </div>
-              
+
               <div className="project-card">
                 <div className="project-icon">🎵</div>
                 <h4>Spotify Recommendation Engine</h4>
                 <p>
-                  Designing a scalable ETL pipeline with Apache Spark, targeting 85% ML accuracy on Databricks. 
+                  Designing a scalable ETL pipeline with Apache Spark, targeting 85% ML accuracy on Databricks.
                   Leveraging MongoDB and S3 for efficient data retrieval in large-scale applications.
                 </p>
                 <div className="project-status">In Progress</div>
               </div>
-              
+
               <div className="project-card featured">
                 <div className="project-icon">💬</div>
                 <h4>ClearBox: GDPR-Compliant Messaging</h4>
                 <p>
-                  Created a secure full on cloud system for 1,000 daily users with end-to-end encryption 
+                  Created a secure full on cloud system for 1,000 daily users with end-to-end encryption
                   (100% GDPR compliant). Reduced message latency via optimized queue management.
                 </p>
                 <div className="project-badge">You are here</div>
               </div>
             </div>
           </div>
-          
+
           <div className="about-education">
             <h3>Education</h3>
             <div className="education-card">
@@ -2723,13 +2723,13 @@ const About = () => {
                   <strong>Focus:</strong> Real-time data systems and scalable software solutions for networked societies
                 </p>
                 <p className="education-courses">
-                  <strong>Relevant coursework:</strong> Big Data Engineering, Data Analytics & ML, 
+                  <strong>Relevant coursework:</strong> Big Data Engineering, Data Analytics & ML,
                   Cloud Services, Software Development Operations
                 </p>
               </div>
             </div>
           </div>
-          
+
           <div className="about-certifications">
             <h3>Certifications & Languages</h3>
             <div className="certifications-list">
@@ -2758,12 +2758,12 @@ const About = () => {
           </div>
         </div>
       </section>
-      
+
       <section className="about-contact">
         <div className="container">
           <h3>Let's Connect</h3>
           <p>
-            I'm always open to discussing technology, data engineering, AI projects, or potential collaborations. 
+            I'm always open to discussing technology, data engineering, AI projects, or potential collaborations.
             Feel free to reach out through any of the platforms below:
           </p>
           <div className="contact-methods">
@@ -2782,7 +2782,7 @@ const About = () => {
           </div>
         </div>
       </section>
-      
+
       <footer className="about-footer">
         <div className="container">
           <p>&copy; {new Date().getFullYear()} Imad Eddine El Mouss. All rights reserved.</p>
