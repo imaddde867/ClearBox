@@ -5,12 +5,15 @@ import {
   Route,
   Navigate,
   Link,
+  NavLink,
 } from 'react-router-dom';
 import EmojiPicker from 'emoji-picker-react';
 import { useAuth } from './contexts/AuthContext';
 import { useContacts } from './contexts/ContactsContext';
 import { useMessages } from './contexts/MessagesContext';
 import { useNotifications } from './contexts/NotificationsContext';
+import { useGroups } from './contexts/GroupsContext';
+import GroupChat from './components/GroupChat';
 import api from './services/api';
 import './App.css';
 
@@ -517,6 +520,22 @@ const Dashboard = () => {
     markAllNotificationsAsRead,
     refreshNotifications
   } = useNotifications();
+
+  const {
+    groups,
+    groupRequests,
+    searchGroupResults,
+    loading: groupsLoading,
+    error: groupsError,
+    searchGroups,
+    sendGroupRequest,
+    acceptGroupRequest,
+    rejectGroupRequest,
+    searchGroupLoading,
+    refreshGroups,
+    refreshGroupRequests,
+    refreshGroupSentRequests
+  } = useGroups();
 
   const [activeSection, setActiveSection] = useState('messages');
   const [searchTerm, setSearchTerm] = useState('');
@@ -1492,6 +1511,11 @@ const Dashboard = () => {
                 {unreadMessages > 0 && <span className="badge message-badge">{unreadMessages}</span>}
               </button>
             </li>
+            <li className={activeSection === 'groups' ? 'active' : ''}>
+              <button onClick={() => setActiveSection('groups')}>
+                <span className="nav-text">Groups</span>
+              </button>
+            </li>
             <li className={activeSection === 'contacts' ? 'active' : ''}>
               <button onClick={() => setActiveSection('contacts')}>
                 <span className="nav-text">Contacts</span>
@@ -1828,24 +1852,15 @@ const Dashboard = () => {
             </div>
           )}
 
+          {activeSection === 'groups' && (
+            <div className="groups-section">
+              <GroupChat />
+            </div>
+          )}
+
           {activeSection === 'contacts' && (
             <div className="contacts-section">
               <div className="tabs">
-                <button
-                  className={`tab ${!showSearch ? 'active' : ''}`}
-                  onClick={() => setShowSearch(false)}
-                >
-                  <span className="tab-icon">👥</span>
-                  <span className="tab-text">My Contacts</span>
-                </button>
-                <button
-                  className={`tab ${showSearch ? 'active' : ''}`}
-                  onClick={() => setShowSearch(true)}
-                >
-                  <span className="tab-icon">🔍</span>
-                  <span className="tab-text">Find Users</span>
-                </button>
-              </div>
 
               {showSearch ? (
                 <div className="search-users-section">
@@ -2031,6 +2046,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               )}
+              </div>
             </div>
           )}
 

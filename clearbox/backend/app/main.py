@@ -10,7 +10,7 @@ from .models import User, Contact, ContactRequest, Message, Group, GroupMember
 from .mqtt_client import setup_mqtt_client
 
 # Import routers
-from .routes import auth, users, contacts, messages, notifications, websockets
+from .routes import auth, users, contacts, messages, notifications, websockets, groups
 
 # Load environment variables
 load_dotenv()
@@ -50,6 +50,7 @@ app.include_router(users.router, prefix="/api")
 app.include_router(contacts.router, prefix="/api")
 app.include_router(messages.router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
+app.include_router(groups.router, prefix="/api")
 
 # Include WebSocket router - WebSockets don't use /api prefix
 app.include_router(websockets.router)
