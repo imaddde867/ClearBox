@@ -1245,7 +1245,7 @@ const Dashboard = () => {
     
     try {
       // Call the delete account endpoint
-      await api.delete('/users/account');
+      await api.delete('/user');
       
       // Logout the user
       logout();
