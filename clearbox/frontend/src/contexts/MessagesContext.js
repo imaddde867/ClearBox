@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import api from '../services/api';
 import { useAuth } from './AuthContext';
 
@@ -14,9 +14,11 @@ export function MessagesProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeChat, setActiveChat] = useState(null);
+  const [websocket, setWebsocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
   
   // Add a ref to track if messages are loaded for a given chat
-  const loadedChatsRef = React.useRef(new Set());
+  const loadedChatsRef = useRef(new Set());
   
   // Fetch messages for the active chat
   const loadMessages = async (userId, silent = false) => {
@@ -47,144 +49,216 @@ export function MessagesProvider({ children }) {
         response.data = [];
       }
       
-      // Process messages to protect content from being encrypted
+      // Process messages - we need to restore any preserved message content
       const processedMessages = response.data.map(msg => {
-        // First check existing messages in state
-        const existingMsg = messages[userId]?.find(m => m.id === msg.id);
-        
-        // Then check localStorage for preserved content
+        // Check localStorage for preserved content
         const preservedContent = getPreservedContent(msg.id, null);
         
-        // Use the best available content prioritizing existing message content
-        const content = (existingMsg?.content && existingMsg.content !== "Message content could not be displayed") 
-          ? existingMsg.content
-          : preservedContent
-            ? preservedContent
-            : (msg.content !== "[Encrypted message]")
-              ? msg.content
-              : "Message content could not be displayed";
-        
-        return {
-          ...msg,
-          content,
-          decrypted: true,
-          preserve_content: true
-        };
-      });
-      
-      // Store messages indexed by user ID, but preserve existing messages
-      setMessages(prev => {
-        const existingMessages = prev[userId] || [];
-        
-        // If we already have messages, merge them with the new ones
-        if (existingMessages.length > 0) {
-          const existingIds = new Set(existingMessages.map(msg => msg.id));
-          
-          // Add new messages that don't exist yet
-          const newMessages = processedMessages.filter(msg => !existingIds.has(msg.id));
-          
-          // Update existing messages, keeping original content
-          const updatedExistingMessages = existingMessages.map(existingMsg => {
-            const updatedMsg = processedMessages.find(m => m.id === existingMsg.id);
-            if (updatedMsg && existingMsg.content && existingMsg.content !== "Message content could not be displayed") {
-              return {
-                ...updatedMsg,
-                content: existingMsg.content,
-                preserve_content: true
-              };
-            }
-            return existingMsg;
-          });
-          
+        // If we have preserved content, use it instead of what the server sent
+        if (preservedContent) {
           return {
-            ...prev,
-            [userId]: [...updatedExistingMessages, ...newMessages]
+            ...msg,
+            content: preservedContent,
+            decrypted: true,
+            preserve_content: true
           };
         }
         
-        // If no existing messages, use the processed ones
         return {
-          ...prev,
-          [userId]: processedMessages
+          ...msg,
+          decrypted: true
         };
       });
       
-      // Track that we've loaded messages for this chat
+      // Sort messages by timestamp to ensure correct order
+      processedMessages.sort((a, b) => {
+        const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
+        const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
+        return timeA - timeB;
+      });
+      
+      // Update state with messages
+      setMessages(prev => ({
+        ...prev,
+        [userId]: processedMessages
+      }));
+      
+      // Mark as loaded
       loadedChatsRef.current.add(userId);
+      
+      // Clear error state
       setError(null);
-    } catch (error) {
-      console.error(`Error loading messages for user ${userId}:`, error);
-      setError(`Failed to load messages. ${error.message || 'Please try again'}`);
-    } finally {
-      if (!silent && isInitialLoad) {
-        setLoading(false);
+    } catch (err) {
+      console.error('Error loading messages:', err);
+      // Don't set error state to avoid UI flickering
+      
+      // Still keep any messages we have
+      if (!messages[userId]) {
+        setMessages(prev => ({
+          ...prev,
+          [userId]: [] // Empty array to avoid continuous loading attempts
+        }));
+        
+        // Even if there's an error, mark as loaded to prevent infinite loading
+        loadedChatsRef.current.add(userId);
       }
+    } finally {
+      // Always turn off loading regardless of success/failure
+      setLoading(false);
     }
   };
 
-  // Replace the one-time load with auto-refresh
+  // Set up WebSocket connection when user logs in
   useEffect(() => {
-    if (activeChat) {
-      // Load messages initially
-      loadMessages(activeChat);
-      
-      // Set up a polling interval to check for new messages
-      const intervalId = setInterval(() => {
-        // Use a separate function for polling to avoid conflicting with the main load
-        pollForNewMessages(activeChat);
-      }, 3000); // Check every 3 seconds
-      
-      // Clean up the interval when component unmounts or activeChat changes
-      return () => clearInterval(intervalId);
-    }
-  }, [activeChat]);
-
-  // Update the polling function to handle errors better and use the correct endpoints
-  const pollForNewMessages = async (userId) => {
-    if (!userId || !currentUser) return;
+    if (!currentUser || !currentUser.id) return;
     
-    try {
-      // Instead of using the /since endpoint which seems to not exist,
-      // just fetch all messages and filter client-side
-      const response = await api.get(`/messages/user/${userId}`);
-      
-      // Ensure we have a valid array response
-      if (!response.data || !Array.isArray(response.data)) {
-        console.warn('Received invalid messages data format in polling:', response.data);
-        return;
-      }
-      
-      // Filter for new messages client-side based on what we already have
-      const existingMessages = messages[userId] || [];
-      const existingIds = new Set(existingMessages.map(msg => msg.id));
-      
-      // Find messages in the response that aren't in our existing messages
-      const newMessages = response.data
-        .filter(msg => !existingIds.has(msg.id))
-        .map(msg => ({
-          ...msg,
-          content: msg.content,
-          decrypted: true,
-          preserve_content: true
-        }));
-      
-      // If no new messages, do nothing
-      if (newMessages.length === 0) {
-        return;
-      }
-      
-      // Update our messages state with the new messages
-      setMessages(prev => {
-        const currentMessages = prev[userId] || [];
-        return {
-          ...prev,
-          [userId]: [...currentMessages, ...newMessages]
-        };
-      });
-    } catch (error) {
-      console.error("Error polling for new messages:", error);
-      // Don't set error state to avoid UI disruption, just log it
+    // Get token from localStorage
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No authentication token available for WebSocket connection');
+      return;
     }
+    
+    // Connect to WebSocket
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socket = new WebSocket(`${protocol}//${window.location.hostname}:8000/ws/chat/${token}`);
+    
+    socket.onopen = () => {
+      console.log('WebSocket connection established');
+      setIsConnected(true);
+      setWebsocket(socket);
+    };
+    
+    socket.onclose = () => {
+      console.log('WebSocket connection closed');
+      setIsConnected(false);
+      setWebsocket(null);
+      
+      // Try to reconnect after a delay
+      setTimeout(() => {
+        console.log('Attempting to reconnect WebSocket...');
+        // The effect will run again, creating a new connection
+      }, 5000);
+    };
+    
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+    
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('Received WebSocket message:', data);
+        
+        // Dispatch event to the window so App.js can also process it
+        const customEvent = new CustomEvent('ws-message', { detail: data });
+        window.dispatchEvent(customEvent);
+        
+        // Handle different message types
+        if (data.type === 'message') {
+          // Direct message received
+          handleIncomingMessage(data);
+        } else if (data.type === 'group_message') {
+          // Group message received
+          handleIncomingGroupMessage(data);
+        } else if (data.type === 'presence') {
+          // Presence update (online/offline status)
+          console.log(`User ${data.userId} is ${data.online ? 'online' : 'offline'}`);
+          // We don't handle this here as it's managed in App.js
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    };
+    
+    // Set up ping interval to keep connection alive
+    const pingInterval = setInterval(() => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, 30000); // every 30 seconds
+    
+    // Clean up on unmount or user change
+    return () => {
+      clearInterval(pingInterval);
+      if (socket) {
+        socket.close();
+      }
+    };
+  }, [currentUser]);
+  
+  // Handle incoming direct message
+  const handleIncomingMessage = (data) => {
+    const { messageId, senderId, content, timestamp } = data;
+    
+    // Add to state
+    setMessages(prev => {
+      // Process both the sender's chat and the active chat
+      const chatId = senderId;
+      const existingMessages = prev[chatId] || [];
+      
+      // Check if we already have this message (avoid duplicates)
+      if (existingMessages.some(msg => msg.id === messageId)) {
+        return prev;
+      }
+      
+      // Create new message object with a properly parsed timestamp
+      const parsedTimestamp = new Date(timestamp).toISOString();
+      const newMessage = {
+        id: messageId,
+        sender_id: senderId,
+        receiver_id: currentUser.id,
+        content: content,
+        created_at: parsedTimestamp,
+        timestamp: parsedTimestamp, // Ensure we have both timestamp formats
+        decrypted: true,
+        delivered: true
+      };
+      
+      // Save content to localStorage for preservation
+      try {
+        const savedMessages = JSON.parse(localStorage.getItem('preservedMessages') || '{}');
+        savedMessages[messageId] = { id: messageId, content };
+        localStorage.setItem('preservedMessages', JSON.stringify(savedMessages));
+      } catch (e) {
+        console.error('Error saving message to localStorage', e);
+      }
+      
+      // Create new messages array with proper sorting
+      const updatedMessages = [...existingMessages, newMessage];
+      
+      // Sort all messages by timestamp in ascending order (oldest first)
+      updatedMessages.sort((a, b) => {
+        // Ensure we have standard date objects for comparison
+        const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
+        const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
+        return timeA - timeB;
+      });
+      
+      // Create new state with updated messages
+      const newState = { ...prev };
+      
+      // Update the sender's chat in the state
+      newState[chatId] = updatedMessages;
+      
+      return newState;
+    });
+    
+    // Acknowledge receipt
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+      websocket.send(JSON.stringify({
+        type: 'read_message',
+        messageId
+      }));
+    }
+  };
+  
+  // Handle incoming group message
+  const handleIncomingGroupMessage = (data) => {
+    const { messageId, senderId, groupId, content, timestamp } = data;
+    
+    // We don't currently have group chat in state, but could implement it
+    console.log(`Group message received from ${senderId} to group ${groupId}`);
   };
 
   // Add a public refresh function that follows the same pattern as in ContactsContext
@@ -209,30 +283,39 @@ export function MessagesProvider({ children }) {
     }
   }, []);
 
-  // Update the sendMessage function to use the correct endpoint
+  // Use the activeChat to load messages when it changes
+  useEffect(() => {
+    if (activeChat) {
+      loadMessages(activeChat);
+    }
+  }, [activeChat]);
+
+  // Send message function
   const sendMessage = async (recipientId, content) => {
-    if (!recipientId || !content || !currentUser) {
+    if (!recipientId || !content || !content.trim() || !currentUser) {
       throw new Error('Missing required data to send message');
     }
     
     try {
       const payload = {
-        recipient_id: recipientId,
-        content: content
+        receiver_id: recipientId,
+        content: content.trim()
       };
+      
+      // Create a consistent timestamp for the optimistic message
+      const now = new Date();
+      const isoTimestamp = now.toISOString();
       
       // Add optimistic update for immediate UI feedback
       const tempId = `temp-${Date.now()}`;
       const optimisticMessage = {
         id: tempId,
-        content,
+        content: content.trim(),
         sender_id: currentUser.id,
-        from_user: currentUser.id,
-        to_user: recipientId,
-        chat_id: recipientId,
-        timestamp: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        read: false,
+        receiver_id: recipientId,
+        timestamp: isoTimestamp,
+        created_at: isoTimestamp,
+        delivered: false,
         decrypted: true,
         preserve_content: true,
         pending: true
@@ -241,35 +324,47 @@ export function MessagesProvider({ children }) {
       // Add the optimistic message to state
       setMessages(prev => {
         const existingMessages = prev[recipientId] || [];
+        
+        // Add new message to existing ones
+        const updatedMessages = [...existingMessages, optimisticMessage];
+        
+        // Sort messages by timestamp in ascending order (oldest first)
+        updatedMessages.sort((a, b) => {
+          // Ensure we have standard date objects for comparison
+          const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
+          const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
+          return timeA - timeB;
+        });
+        
         return {
           ...prev,
-          [recipientId]: [...existingMessages, optimisticMessage]
+          [recipientId]: updatedMessages
         };
       });
       
-      // Try multiple endpoints in case one fails
-      let response;
-      try {
-        // Try the most likely endpoint first
-        response = await api.post('/messages', payload);
-      } catch (firstError) {
-        console.log('First endpoint failed, trying alternative endpoint', firstError);
-        try {
-          // Try alternative endpoint format
-          response = await api.post('/messages/send', payload);
-        } catch (secondError) {
-          console.log('Second endpoint failed, trying final endpoint', secondError);
-          // Try one more format as last resort
-          response = await api.post(`/messages/user/${recipientId}`, payload);
-        }
-      }
+      // Send message to server
+      const response = await api.post('/messages', payload);
       
       // Update the message with the real ID and remove pending status
       if (response && response.data && response.data.id) {
         setMessages(prev => {
           const updatedMessages = (prev[recipientId] || []).map(msg => 
-            msg.id === tempId ? { ...msg, id: response.data.id, pending: false } : msg
+            msg.id === tempId ? { 
+              ...msg, 
+              id: response.data.id, 
+              timestamp: response.data.created_at || msg.timestamp, // Use server timestamp if available
+              created_at: response.data.created_at || msg.created_at,
+              pending: false 
+            } : msg
           );
+          
+          // Ensure messages are sorted by timestamp
+          updatedMessages.sort((a, b) => {
+            // Ensure we have standard date objects for comparison
+            const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
+            const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
+            return timeA - timeB;
+          });
           
           return {
             ...prev,
@@ -280,7 +375,7 @@ export function MessagesProvider({ children }) {
         // Save message content to localStorage for content preservation
         try {
           const savedMessages = JSON.parse(localStorage.getItem('preservedMessages') || '{}');
-          savedMessages[response.data.id] = { id: response.data.id, content };
+          savedMessages[response.data.id] = { id: response.data.id, content: content.trim() };
           localStorage.setItem('preservedMessages', JSON.stringify(savedMessages));
         } catch (e) {
           console.error('Error saving message to localStorage', e);
@@ -301,6 +396,14 @@ export function MessagesProvider({ children }) {
           } : msg
         );
         
+        // Ensure messages are sorted by timestamp
+        updatedMessages.sort((a, b) => {
+          // Ensure we have standard date objects for comparison
+          const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
+          const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
+          return timeA - timeB;
+        });
+        
         return {
           ...prev,
           [recipientId]: updatedMessages
@@ -313,13 +416,13 @@ export function MessagesProvider({ children }) {
 
   const markAsRead = async (messageId) => {
     try {
-      await api.post(`/messages/read/${messageId}`);
+      await api.put(`/messages/${messageId}/delivered`);
     } catch (err) {
       console.error('Failed to mark message as read:', err);
     }
   };
 
-  // Add helper to check localStorage for preserved content
+  // Helper to check localStorage for preserved content
   const getPreservedContent = (messageId, defaultContent) => {
     try {
       const savedMessages = JSON.parse(localStorage.getItem('preservedMessages') || '{}');
@@ -339,7 +442,8 @@ export function MessagesProvider({ children }) {
     loadMessages,
     refreshMessages,
     markAsRead,
-    getPreservedContent
+    getPreservedContent,
+    isConnected
   };
 
   return (

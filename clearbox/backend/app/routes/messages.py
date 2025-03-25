@@ -4,11 +4,12 @@ from typing import List, Optional
 from sqlalchemy import and_, or_, desc
 
 from ..database import get_db
-from ..models import User, Message, Contact, Group, GroupMember
+from ..models import User, Message, Contact, Group, GroupMember, Notification
 from ..schemas import MessageCreate, MessageResponse
 from ..security import get_current_active_user
 from ..encryption import encrypt_message, decrypt_message
 from ..mqtt_client import publish_message, get_mqtt_client
+from .websockets import manager
 
 router = APIRouter(tags=["Messages"])
 
@@ -24,22 +25,8 @@ def send_message(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Send a new message to a user or a group
+    Send a message to a user or group
     """
-    # Make sure at least one destination is specified
-    if message.receiver_id is None and message.group_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Either receiver_id or group_id must be specified"
-        )
-    
-    # Check if both destinations are specified
-    if message.receiver_id is not None and message.group_id is not None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot specify both receiver_id and group_id"
-        )
-    
     # Handle direct message
     if message.receiver_id is not None:
         # Check if the receiver exists
@@ -65,31 +52,51 @@ def send_message(
         # Encrypt the message content
         encrypted_content = encrypt_message(message.content)
         
+        # Check if recipient is online
+        recipient_online = manager.is_user_online(message.receiver_id)
+        
         # Create the message in the database
         db_message = Message(
             sender_id=current_user.id,
             receiver_id=message.receiver_id,
             content=encrypted_content,
             encrypted=True,
-            # Set delivered to False initially, will be updated when received
-            delivered=False
+            # Set delivered to True if recipient is online, otherwise False
+            delivered=recipient_online
         )
         
         db.add(db_message)
         db.commit()
         db.refresh(db_message)
         
-        # Send via MQTT in the background
-        mqtt_payload = {
-            "message_id": db_message.id,
-            "sender_id": db_message.sender_id,
-            "content": encrypted_content,  # Send encrypted content
-            "timestamp": db_message.created_at.isoformat(),
-        }
-        
-        # Topic format: /chat/{user_id}
-        mqtt_topic = f"/chat/{message.receiver_id}"
-        background_tasks.add_task(send_mqtt_message, mqtt_topic, mqtt_payload)
+        # If recipient is online, send via WebSocket
+        if recipient_online:
+            # Send message via WebSocket
+            ws_message = {
+                "type": "message",
+                "messageId": db_message.id,
+                "senderId": db_message.sender_id,
+                "content": message.content,  # Send decrypted content
+                "timestamp": db_message.created_at.isoformat()
+            }
+            
+            # Send in background to avoid blocking
+            background_tasks.add_task(
+                manager.send_personal_message,
+                ws_message,
+                message.receiver_id
+            )
+        else:
+            # Recipient is offline, create a notification for them
+            notification = Notification(
+                user_id=message.receiver_id,
+                type="message",
+                content=f"New message from {current_user.username}",
+                read=False,
+                related_user_id=current_user.id
+            )
+            db.add(notification)
+            db.commit()
         
         # Return the message with decrypted content for the sender
         response = db_message
@@ -135,18 +142,45 @@ def send_message(
         db.commit()
         db.refresh(db_message)
         
-        # Send via MQTT in the background
-        mqtt_payload = {
-            "message_id": db_message.id,
-            "sender_id": db_message.sender_id,
-            "group_id": db_message.group_id,
-            "content": encrypted_content,  # Send encrypted content
-            "timestamp": db_message.created_at.isoformat(),
+        # Get all group members
+        members = db.query(GroupMember).filter(
+            GroupMember.group_id == message.group_id
+        ).all()
+        
+        # Prepare message for WebSocket
+        ws_message = {
+            "type": "group_message",
+            "messageId": db_message.id,
+            "senderId": db_message.sender_id,
+            "groupId": db_message.group_id,
+            "content": message.content,  # Send decrypted content
+            "timestamp": db_message.created_at.isoformat()
         }
         
-        # Topic format: /group/{group_id}
-        mqtt_topic = f"/group/{message.group_id}"
-        background_tasks.add_task(send_mqtt_message, mqtt_topic, mqtt_payload)
+        # Send to all online members
+        for member in members:
+            if member.user_id != current_user.id:  # Don't send to sender
+                if manager.is_user_online(member.user_id):
+                    # Send in background to avoid blocking
+                    background_tasks.add_task(
+                        manager.send_personal_message,
+                        ws_message,
+                        member.user_id
+                    )
+                else:
+                    # Create notification for offline members
+                    notification = Notification(
+                        user_id=member.user_id,
+                        type="group_message",
+                        content=f"New message in {group.name} from {current_user.username}",
+                        read=False,
+                        related_user_id=current_user.id,
+                        related_group_id=group.id
+                    )
+                    db.add(notification)
+        
+        # Commit all notifications
+        db.commit()
         
         # Return the message with decrypted content for the sender
         response = db_message
@@ -207,8 +241,8 @@ def get_user_messages(
                 # If decryption fails, indicate that
                 msg.content = "[Encrypted message]"
         
-        # Mark as delivered if received
-        if msg.sender_id == user_id and not msg.delivered:
+        # Mark as delivered if received and the current user is the receiver
+        if msg.sender_id == user_id and msg.receiver_id == current_user.id and not msg.delivered:
             msg.delivered = True
             db.commit()
     
@@ -267,7 +301,7 @@ def mark_message_delivered(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Mark a message as delivered (for tracking unread messages)
+    Mark a message as delivered (for tracking read/unread messages)
     """
     message = db.query(Message).filter(
         Message.id == message_id,
