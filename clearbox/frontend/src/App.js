@@ -2013,7 +2013,16 @@ const Dashboard = () => {
                   </div>
 
                   <div className="my-contacts-section">
-                    <h3>My Contacts</h3>
+                    <div className="section-header-with-actions">
+                      <h3>My Contacts</h3>
+                      <button 
+                        className="action-button" 
+                        onClick={() => setShowSearch(true)}
+                        title="Search for users to add as contacts"
+                      >
+                        Find Users
+                      </button>
+                    </div>
                     <div className="contacts-grid">
                       {contacts?.length > 0 ? (
                         contacts.map(contact => (
