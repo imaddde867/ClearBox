@@ -967,13 +967,16 @@ body {
 
 .messages-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: minmax(250px, 20%) 1fr;
   height: 100%;
   gap: 1.5rem;
+  padding: 0 1rem;
   overflow: hidden;
   background-color: rgba(25, 25, 40, 0.4);
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Contacts Sidebar - Improved */
