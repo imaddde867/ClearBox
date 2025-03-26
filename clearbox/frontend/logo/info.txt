@@ -1,0 +1,14 @@
+
+Hope you enjoy your new logo, here are the people that
+made your beautiful logo happen :)
+font name: Chunk
+font link: https://www.theleagueofmoveabletype.com/chunk
+font author: Meredith Mandel
+font author site: https://www.theleagueofmoveabletype.com/
+
+
+icon designer: Kawalan Icon
+icon designer link: /kawalan.studio
+        
+{"font":"#000000","bg":"transparent","icon-gradient-0":"#410FF8","icon-gradient-1":"#410FF8","slogan":"#141414"}
+      
