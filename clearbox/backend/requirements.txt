@@ -1,12 +1,24 @@
+# Core dependencies
 fastapi==0.104.0
 uvicorn==0.23.2
 pydantic==2.4.2
 sqlalchemy==2.0.22
 passlib==1.7.4
 python-jose==3.3.0
-psycopg2-binary==2.9.9
 paho-mqtt==2.1.0
 python-multipart==0.0.6
 cryptography==41.0.4
 bcrypt==4.0.1
-python-dotenv==1.0.0 
+python-dotenv==1.0.0
+
+# Production dependencies
+gunicorn==21.2.0
+psycopg2-binary==2.9.9  # PostgreSQL adapter
+alembic==1.12.1  # Database migrations
+uvloop==0.17.0  # High-performance event loop
+httptools==0.6.1  # Fast HTTP parsing
+redis==5.0.1  # For caching and session storage (optional)
+
+# Monitoring and logging
+sentry-sdk[fastapi]==1.33.1
+prometheus-fastapi-instrumentator==6.1.0 
