@@ -48,8 +48,6 @@ ClearBox is a secure, scalable, GDPR-compliant messaging app built with Python (
 - **🎨 Modern UI**: Futuristic, dark-themed interface built with React
 - **📴 Offline Support**: Message queue for sending messages when offline
 - **✓ Read Receipts**: Know when your messages have been delivered and read
-- **📎 Media Sharing**: Support for sharing images and files
-- **😀 Message Reactions**: React to messages with emojis
 
 ---
 
@@ -208,7 +206,6 @@ The codebase has been optimized for better performance and maintainability:
 - **Prettier**: Code formatting
 - **React DevTools**: React debugging
 - **FastAPI Swagger UI**: API documentation and testing
-- **Docker**: Containerization (optional)
 
 ---
 
@@ -228,7 +225,7 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/clearbox.git
+git clone https://github.com/imaddde867/clearbox.git
 cd clearbox
 ```
 
@@ -803,20 +800,6 @@ ClearBox is designed to be scalable:
 
 ---
 
-## 👥 Contributing
-
-We welcome contributions to ClearBox! To contribute:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature-name`
-3. Commit your changes: `git commit -m 'Add some feature'`
-4. Push to the branch: `git push origin feature/your-feature-name`
-5. Submit a pull request
-
-Please follow the project's coding style and include appropriate tests.
-
----
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
@@ -824,5 +807,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 <p align="center">
-  Made with ❤️ by the ClearBox Team
+  Made with ❤️
 </p> 
