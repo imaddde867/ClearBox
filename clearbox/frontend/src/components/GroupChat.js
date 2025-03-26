@@ -642,7 +642,8 @@ function GroupChat() {
         ) : (
           <div className="no-chat-selected">
             <div className="empty-state-icon">👥</div>
-            <div>Select a group to start chatting</div>
+            <div className="empty-state-title">Welcome to Group Chat</div>
+            <div className="empty-state-description">Select a group from the sidebar or create a new one to start chatting</div>
             {groups.length === 0 && (
               <button 
                 onClick={() => setShowNewGroup(true)}
