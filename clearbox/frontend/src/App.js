@@ -969,9 +969,13 @@ const Dashboard = () => {
       // If timestamps are exactly the same (rare), use message ID as secondary sort
       if (timeA === timeB) {
         // Temp IDs always go last if timestamps match
-        if (a.id.toString().startsWith('temp-')) return 1;
-        if (b.id.toString().startsWith('temp-')) return -1;
-        return a.id.localeCompare(b.id);
+        if (a.id && a.id.toString().startsWith('temp-')) return 1;
+        if (b.id && b.id.toString().startsWith('temp-')) return -1;
+        
+        // Ensure both IDs are strings before using localeCompare
+        const idA = a.id ? a.id.toString() : '';
+        const idB = b.id ? b.id.toString() : '';
+        return idA.localeCompare(idB);
       }
 
       return timeA - timeB;
