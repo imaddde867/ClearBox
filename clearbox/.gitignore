@@ -1,0 +1,99 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.template
+*.pem
+*.key
+*.cert
+*.crt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+venv/
+ENV/
+env/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Node
+node_modules/
+/frontend/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/frontend/.pnp
+/frontend/.pnp.js
+
+# Frontend build artifacts
+/frontend/build
+/frontend/coverage
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+clearbox.db
+*.db-journal
+*.sql
+*.backup*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log.*
+
+# Deployment
+deploy.tar.gz
+deploy_*.tar.gz
+*.tar.gz
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+*.tfvars
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+
+# Migration logs
+migration_*.log 
