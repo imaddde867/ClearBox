@@ -9,7 +9,7 @@
 ClearBox is a secure, scalable, GDPR-compliant messaging app built with Python (FastAPI) and React. It features real-time messaging using MQTT, end-to-end encryption, and a modern dark-themed UI.
 
 <p align="center">
-  <img src="frontend/logo/vector/default-monochrome-white.svg" alt="ClearBox Logo" width="500"/>
+  <img src="clearbox/frontend/logo/vector/default-monochrome-white.svg" alt="ClearBox Logo" width="500"/>
 </p>
 
 ---
