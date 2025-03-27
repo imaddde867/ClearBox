@@ -16,7 +16,7 @@ ClearBox is a secure, scalable, GDPR-compliant messaging application with end-to
 ## 📸 Screenshots
 
 ### Login Screen
-![Login Screen](clearbox/rontend/public/screenshots/login.png)
+![Login Screen](clearbox/frontend/public/screenshots/login.png)
 
 ### Chat Interface
 ![Chat Interface](clearbox/frontend/public/screenshots/chat.png)
