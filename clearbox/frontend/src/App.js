@@ -1146,18 +1146,23 @@ const Dashboard = () => {
   // Add a useEffect to ensure we track when contacts finish loading
   useEffect(() => {
     // If we have contacts data and the loading is complete, mark data as loaded
-    if (contacts?.length > 0 && !contactsLoading) {
+    if (contacts?.length > 0 && !contactsLoading.contacts) {
       initialDataLoadedRef.current = true;
     }
+    
+    // Add a timeout to automatically stop showing loading indicator after 5 seconds
+    // regardless of whether contacts were found or not
+    const timer = setTimeout(() => {
+      initialDataLoadedRef.current = true;
+    }, 5000);
+    
+    return () => clearTimeout(timer);
   }, [contacts, contactsLoading]);
 
   // Add a helper function to determine if contacts data is actually in a loading state
   const isContactsLoading = () => {
-    // Consider contacts as loading only if:
-    // 1. contactsLoading is true
-    // 2. We haven't loaded data yet (initialDataLoadedRef.current is false)
-    // 3. We don't have any contacts data yet (contacts.length === 0)
-    return contactsLoading && !initialDataLoadedRef.current && contacts.length === 0;
+    // Only return true if we're still loading AND we haven't marked data as loaded yet
+    return contactsLoading.contacts && !initialDataLoadedRef.current;
   };
 
   // Dashboard initialization and auth verification
@@ -1636,7 +1641,8 @@ const Dashboard = () => {
                       ))
                     ) : (
                       <div className="no-contacts">
-                        <p>No contacts found</p>
+                        <p>No contacts yet</p>
+                        <p className="contact-tip">Get started by adding some friends</p>
                         <button
                           className="search-contacts-btn"
                           onClick={() => {
@@ -2056,7 +2062,7 @@ const Dashboard = () => {
                       ) : (
                         <div className="no-contacts-message">
                           <p>Your contacts list is empty.</p>
-                          <p className="contact-tip">Start by finding and adding users in the "Find Users" tab.</p>
+                          <p className="contact-tip">Start by finding and adding users to chat with.</p>
                           <button
                             className="find-users-btn"
                             onClick={() => setShowSearch(true)}
