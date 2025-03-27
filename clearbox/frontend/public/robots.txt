@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+
+# Private areas that shouldn't be indexed
+Disallow: /dashboard
+Disallow: /api/
+
+# Point to sitemap
+Sitemap: https://clearbox.live/sitemap.xml 

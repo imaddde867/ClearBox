@@ -1,303 +1,200 @@
-# ClearBox - Secure Messaging App 🔐
+# ClearBox - Secure Messaging Platform
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Python](https://img.shields.io/badge/Python-3.8+-yellow.svg)
 ![React](https://img.shields.io/badge/React-18.x-61DAFB.svg)
-![MQTT](https://img.shields.io/badge/MQTT-5.x-orange.svg)
 
-ClearBox is a secure, scalable, GDPR-compliant messaging app built with Python (FastAPI) and React. It features real-time messaging using MQTT, end-to-end encryption, and a modern dark-themed UI.
+ClearBox is a secure, scalable, GDPR-compliant messaging application with end-to-end encryption and real-time communication capabilities.
+
+**[✨ Live Demo: clearbox.live ✨](https://clearbox.live)**
 
 <p align="center">
-  <img src="clearbox/frontend/logo/vector/default-monochrome-white.svg" alt="ClearBox Logo" width="500"/>
+  <img src="frontend/logo/vector/default-monochrome-white.svg" alt="ClearBox Logo" width="400"/>
 </p>
 
----
+## 🚀 Overview
 
-## 📋 Table of Contents
+ClearBox is a full-stack secure messaging platform designed with modern security standards and user privacy at its core. The application enables real-time communication between users, supports group conversations, and ensures message delivery even when recipients are offline.
 
-- [Features](#-features)
-- [Architecture Overview](#-architecture-overview)
-- [Code Optimization](#-code-optimization)
-- [Technologies Used](#-technologies-used)
-- [Prerequisites](#-prerequisites)
-- [Installation](#-installation)
-- [Running the Application](#-running-the-application)
-- [Development Process](#-development-process)
-- [Testing Strategy](#-testing-strategy)
-- [API Endpoints](#-api-endpoints)
-- [Technical Implementation Details](#-technical-implementation-details)
-- [Troubleshooting](#-troubleshooting)
-- [Security Considerations](#-security-considerations)
-- [GDPR Compliance](#-gdpr-compliance)
-- [Production Deployment](#-production-deployment)
-- [Scalability](#-scalability)
-- [Contributing](#-contributing)
-- [License](#-license)
+## ✨ Key Features
 
----
+- **🔒 End-to-End Encryption** - All messages encrypted using industry-standard cryptography
+- **💬 Real-time Messaging** - Instant message delivery using MQTT protocol
+- **👥 Contact Management** - Search for users, send/accept contact requests
+- **👨‍👩‍👧‍👦 Group Conversations** - Create and manage chat groups with multiple participants
+- **🔔 Notifications** - Real-time notifications for new messages and requests
+- **📴 Offline Message Queue** - Messages sent while recipients are offline are delivered upon reconnection
+- **📱 Responsive Design** - Works seamlessly on both desktop and mobile devices
+- **🌙 Dark Theme** - Modern, eye-friendly interface
 
-## ✨ Features
+## 🛠️ Tech Stack
 
-- **🔒 Secure Authentication**: User registration and JWT-based authentication
-- **👥 Contact Management**: Search for users, send/accept contact requests
-- **💬 Real-time Messaging**: One-on-one chats and group conversations
-- **🛡️ End-to-End Encryption**: Messages are encrypted using Python's cryptography library
-- **🔔 Notifications**: Real-time notifications for new messages and contact requests
-- **📜 GDPR Compliance**: Users can delete their accounts and data
-- **🎨 Modern UI**: Futuristic, dark-themed interface built with React
-- **📴 Offline Support**: Message queue for sending messages when offline
-- **✓ Read Receipts**: Know when your messages have been delivered and read
-- **📎 Media Sharing**: Support for sharing images and files
-- **😀 Message Reactions**: React to messages with emojis
+### Frontend
+- **React** - UI library with context API for state management
+- **Axios** - HTTP client for API requests
+- **MQTT.js** - Client for real-time message handling
+- **CSS3** - Custom styling with advanced animations
 
----
+### Backend
+- **FastAPI** - High-performance Python web framework
+- **PostgreSQL** - Primary database
+- **SQLAlchemy** - ORM for database interactions
+- **JWT** - Token-based authentication
+- **MQTT (Mosquitto)** - Message broker for real-time communication
 
-## 🏗️ Architecture Overview
+### Deployment
+- **AWS EC2** (t2.micro) - Cloud hosting within AWS free tier
+- **Nginx** - Web server and reverse proxy
+- **Let's Encrypt** - SSL certificate provider
+- **Route 53** - DNS management
 
-ClearBox follows a modern client-server architecture with real-time communication:
+## 📥 Complete Installation Guide
 
-### Backend Architecture
+Follow this comprehensive guide to set up ClearBox on your local machine for development or your own server for production.
 
-<details>
-<summary>Click to expand backend architecture details</summary>
+### Prerequisites
 
-The backend is built using FastAPI and follows a modular architecture:
+Before beginning the installation, ensure you have the following installed:
 
-```
-backend/
-├── app/
-│   ├── __init__.py
-│   ├── main.py            # Main application entry point
-│   ├── database.py        # Database configuration
-│   ├── models.py          # SQLAlchemy ORM models
-│   ├── schemas.py         # Pydantic schemas for validation
-│   ├── security.py        # JWT authentication and security
-│   ├── encryption.py      # E2E encryption implementation
-│   ├── mqtt_client.py     # MQTT client for real-time messaging
-│   └── routes/            # API route definitions
-│       ├── auth.py        # Authentication endpoints
-│       ├── users.py       # User management endpoints
-│       ├── contacts.py    # Contact management endpoints
-│       ├── messages.py    # Messaging endpoints
-│       ├── groups.py      # Group chat endpoints
-│       ├── notifications.py # Notification endpoints
-│       └── websockets.py  # WebSocket connection handling
-├── run.py                 # Server startup script
-├── requirements.txt       # Python dependencies
-└── .env                   # Environment configuration
-```
-</details>
+- **Git** - For cloning the repository (version 2.x+)
+- **Python 3.8+** - For the backend server
+- **Node.js 14+** - For the frontend application
+- **npm 6+** - For package management
+- **PostgreSQL 12+** - For production database
+- **SQLite** - For development database (included with Python)
+- **MQTT Broker** - For real-time messaging (Mosquitto recommended)
 
-### Frontend Architecture
-
-<details>
-<summary>Click to expand frontend architecture details</summary>
-
-The React frontend follows a modular component-based architecture:
-
-```
-frontend/
-├── public/                # Static files
-├── src/
-│   ├── components/        # Reusable UI components
-│   │   ├── ChatWindow/
-│   │   ├── ContactList/
-│   │   ├── MessageBubble/
-│   │   ├── GroupChat/
-│   │   └── ...
-│   ├── contexts/          # React contexts for state management
-│   │   ├── AuthContext.js
-│   │   ├── ChatContext.js
-│   │   └── ...
-│   ├── pages/             # Application pages
-│   │   ├── Login/
-│   │   ├── Register/
-│   │   ├── Dashboard/
-│   │   └── ...
-│   ├── services/          # API service integrations
-│   │   ├── api.js
-│   │   ├── mqtt.js
-│   │   └── encryption.js
-│   ├── utils/             # Utility functions
-│   │   ├── validators.js
-│   │   └── formatters.js
-│   ├── styles/            # CSS and styling
-│   ├── App.js             # Main application component
-│   └── index.js           # Application entry point
-├── package.json           # Node.js dependencies
-└── fix_css.js             # CSS optimization script
-```
-</details>
-
-### Data Flow
-
-<details>
-<summary>Click to expand data flow details</summary>
-
-1. **Authentication Flow**:
-   - User credentials are validated and a JWT token is issued
-   - Token is stored in local storage and included in all API requests
-   - Token refresh mechanism extends sessions securely
-
-2. **Messaging Flow**:
-   - Messages are encrypted client-side before sending
-   - Messages are sent to the server via API endpoints
-   - Server broadcasts messages via MQTT to relevant recipients
-   - Recipients decrypt messages client-side
-
-3. **Real-time Updates**:
-   - MQTT topics follow the pattern: `user/{user_id}/messages`
-   - Clients subscribe to their personal topics and group topics
-   - Message delivery confirmations are sent back via MQTT
-</details>
-
----
-
-## 🚀 Code Optimization
-
-The codebase has been optimized for better performance and maintainability:
-
-- ✅ Removed unnecessary temporary and backup files
-- ✅ Cleaned up Python cache directories and compiled .pyc files
-- ✅ Removed trailing whitespace and fixed indentation
-- ✅ Ensured consistent coding style throughout the project
-- ✅ Removed redundant blank lines while preserving logical separation
-- ✅ Optimized imports and dependencies
-- ✅ Implemented efficient database queries with proper indexing
-- ✅ Added caching for frequently accessed data
-- ✅ Optimized React rendering with proper use of memoization
-
----
-
-## 🛠️ Technologies Used
-
-### Backend Technologies
-
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Python | 3.8+ | Core programming language |
-| FastAPI | 0.104.0 | High-performance web framework |
-| SQLAlchemy | 2.0.22 | ORM for database interactions |
-| Pydantic | 2.4.2 | Data validation and settings management |
-| PostgreSQL/SQLite | Latest | Primary/Development database |
-| JWT | via python-jose 3.3.0 | Token-based authentication |
-| Bcrypt | 4.0.1 | Password hashing |
-| Cryptography | 41.0.4 | End-to-end encryption library |
-| MQTT (Mosquitto) | Latest | Message broker for real-time communication |
-| Paho-MQTT | 2.1.0 | MQTT client library for Python |
-| Uvicorn | 0.23.2 | ASGI server |
-
-### Frontend Technologies
-
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| React | 18.x | UI library |
-| React Router | 6.16.0 | Client-side routing |
-| Axios | 1.8.4 | HTTP client for API requests |
-| MQTT.js | 5.0.5 | MQTT client for browser |
-| FontAwesome | 6.4.2 | Icon library |
-| Emoji-picker-react | 4.12.2 | Emoji selector component |
-| CSS3 | Latest | Custom styling with advanced animations |
-| LocalStorage/SessionStorage | Browser API | Client-side data persistence |
-
-### Development Tools
-
-- **Git**: Version control
-- **ESLint**: JavaScript linting
-- **Prettier**: Code formatting
-- **React DevTools**: React debugging
-- **FastAPI Swagger UI**: API documentation and testing
-- **Docker**: Containerization (optional)
-
----
-
-## 📋 Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-- Python 3.8 or higher
-- Node.js 14 or higher
-- PostgreSQL (or SQLite for development)
-- Mosquitto MQTT Broker
-
----
-
-## 📥 Installation
-
-### 1. Clone the Repository
+### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/clearbox.git
+# Clone the repository
+git clone https://github.com/imaddde867/clearbox.git
+
+# Navigate to the project directory
 cd clearbox
 ```
 
-### 2. Set Up the Backend
+### Step 2: Set Up the Backend
 
-<details>
-<summary>Expand backend setup instructions</summary>
-
-#### Create a Virtual Environment
+#### Install Python Dependencies
 
 ```bash
+# Navigate to the backend directory
 cd backend
+
+# Create a virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Activate the virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+# venv\Scripts\activate
+
+# Install required packages
+pip install -r requirements.txt
+
+# Verify installation
+pip list
 ```
 
-#### Install Dependencies
+#### Set Up the Database
 
+For development (SQLite - simplest option):
 ```bash
-pip install -r requirements.txt
+# SQLite database will be created automatically
+# No additional steps required
+```
+
+For production (PostgreSQL):
+```bash
+# Connect to PostgreSQL
+psql -U postgres
+
+# Create a database
+CREATE DATABASE clearbox;
+
+# Create a dedicated user (optional but recommended)
+CREATE USER clearbox_user WITH PASSWORD 'your_secure_password';
+GRANT ALL PRIVILEGES ON DATABASE clearbox TO clearbox_user;
+
+# Exit PostgreSQL
+\q
 ```
 
 #### Configure Environment Variables
 
-Create a `.env` file in the `backend` directory based on the `.env.example` file:
+```bash
+# Create an environment file from the template
+cp .env.example .env
+```
 
-```ini
-# Database Configuration
-DATABASE_URL=postgresql://postgres:password@localhost/clearbox
-# For SQLite (development)
-# DATABASE_URL=sqlite:///./clearbox.db
+Edit the `.env` file with your preferred text editor and configure:
 
-# JWT Authentication
-SECRET_KEY=your_secret_key_here
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+For development (SQLite):
+```
+# Database
+DATABASE_URL=sqlite:///./clearbox.db
 
-# Encryption
-ENCRYPTION_KEY=your_encryption_key_here
+# Security
+SECRET_KEY=generate_a_secure_random_string_here
+ACCESS_TOKEN_EXPIRE_MINUTES=60
 
-# MQTT Configuration
+# MQTT
 MQTT_BROKER=localhost
 MQTT_PORT=1883
 
-# Server Configuration
+# Encryption
+ENCRYPTION_KEY=generate_another_secure_random_string_here
+
+# Server
 PORT=8001
+DEBUG=True
 ```
 
-Make sure to replace the placeholders with your actual values.
+For production (PostgreSQL):
+```
+# Database
+DATABASE_URL=postgresql://clearbox_user:your_secure_password@localhost/clearbox
 
-#### Create the Database
+# Security
+SECRET_KEY=generate_a_secure_random_string_here
+ACCESS_TOKEN_EXPIRE_MINUTES=60
 
-For PostgreSQL:
-```sql
-CREATE DATABASE clearbox;
+# MQTT
+MQTT_BROKER=localhost
+MQTT_PORT=1883
+
+# Encryption
+ENCRYPTION_KEY=generate_another_secure_random_string_here
+
+# Server
+PORT=8001
+DEBUG=False
 ```
 
-For SQLite, the database file will be created automatically.
+> **Security Note**: Generate secure random strings for SECRET_KEY and ENCRYPTION_KEY using:
+> ```bash
+> python -c "import secrets; print(secrets.token_hex(32))"
+> ```
 
-The application will automatically create all the necessary tables when started.
-</details>
+#### Initialize the Database
 
-### 3. Set Up the MQTT Broker (Mosquitto)
+```bash
+# Ensure your virtual environment is activated
+# Run the database initialization script
+python run.py init_db
 
-<details>
-<summary>Expand MQTT setup instructions</summary>
+# Create a test user (optional)
+python run.py create_user --username test --password test123 --email test@example.com
+```
 
-#### Install Mosquitto
+### Step 3: Set Up the MQTT Broker
 
-**Ubuntu/Debian:**
+#### Install Mosquitto MQTT Broker
+
+**On Ubuntu/Debian:**
 ```bash
 sudo apt update
 sudo apt install mosquitto mosquitto-clients
@@ -305,517 +202,394 @@ sudo systemctl start mosquitto
 sudo systemctl enable mosquitto
 ```
 
-**macOS:**
+**On macOS:**
 ```bash
 brew install mosquitto
+brew services start mosquitto
 ```
 
-**Windows:**
-Download the installer from [https://mosquitto.org/download/](https://mosquitto.org/download/)
+**On Windows:**
+1. Download the installer from [mosquitto.org/download](https://mosquitto.org/download/)
+2. Follow the installation wizard
+3. Start the Mosquitto service from Windows Services
 
-#### Configure Mosquitto
+#### Configure Mosquitto with WebSocket Support
 
-Create a basic configuration file (mosquitto.conf):
+Create a file named `mosquitto.conf` in an appropriate location:
 
-```ini
+For development:
+```
+# MQTT over TCP
 listener 1883
+allow_anonymous true
+
+# MQTT over WebSockets
+listener 9001
+protocol websockets
 allow_anonymous true
 ```
 
-For production, set up proper authentication and TLS:
-
-```ini
+For production:
+```
+# MQTT over TCP
 listener 1883
 allow_anonymous false
-password_file /path/to/passwd
-cafile /path/to/ca.crt
-certfile /path/to/server.crt
-keyfile /path/to/server.key
-require_certificate true
-```
-</details>
+password_file /etc/mosquitto/passwd
 
-### 4. Set Up the Frontend
+# MQTT over WebSockets
+listener 9001
+protocol websockets
+allow_anonymous false
+password_file /etc/mosquitto/passwd
+
+# Optional: Enable TLS for WebSockets
+# listener 9001
+# protocol websockets
+# cafile /etc/mosquitto/ca_certificates/ca.crt
+# certfile /etc/mosquitto/certs/server.crt
+# keyfile /etc/mosquitto/certs/server.key
+# require_certificate false
+# allow_anonymous false
+# password_file /etc/mosquitto/passwd
+```
+
+Start Mosquitto with this configuration:
+```bash
+# For development
+mosquitto -c mosquitto.conf
+
+# For production (using the system service)
+sudo cp mosquitto.conf /etc/mosquitto/conf.d/clearbox.conf
+sudo systemctl restart mosquitto
+```
+
+If you're using password authentication, create a password file:
+```bash
+sudo mosquitto_passwd -c /etc/mosquitto/passwd mqtt_user
+# Enter password when prompted
+```
+
+### Step 4: Set Up the Frontend
 
 ```bash
+# Navigate to the frontend directory from the project root
 cd ../frontend
+
+# Install Node.js dependencies
 npm install
 ```
 
----
+#### Configure Frontend Environment
 
-## 🚦 Running the Application
+Create a `.env` file in the frontend directory:
 
-### 1. Start the Backend
-
-```bash
-cd backend
-python run.py --reload
+For development:
+```
+REACT_APP_API_URL=http://localhost:8001
+REACT_APP_MQTT_URL=ws://localhost:9001
+REACT_APP_ENV=development
 ```
 
-The API will be available at http://localhost:8001.  
-API documentation is available at http://localhost:8001/docs.
+For production:
+```
+REACT_APP_API_URL=https://your-domain.com/api
+REACT_APP_MQTT_URL=wss://your-domain.com/mqtt
+REACT_APP_ENV=production
+```
 
-### 2. Start the Frontend
+#### Important: Check API Proxy Configuration
+
+The frontend uses a proxy setting in `package.json` to forward API requests to the backend. Make sure the proxy setting points to the correct backend URL:
+
+Open `frontend/package.json` and check that the proxy setting matches your backend URL:
+
+```json
+{
+  "name": "clearbox-frontend",
+  // ...other settings...
+  "proxy": "http://localhost:8001"
+}
+```
+
+If your backend runs on a different port (e.g., 8000), update this setting accordingly.
+
+### Step 5: Start the Application
+
+#### Start the Backend Server
 
 ```bash
-cd frontend
+# Ensure you're in the backend directory with the virtual environment activated
+cd ../backend
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# For development with auto-reload
+python run.py --reload
+
+# For production
+python run.py
+```
+
+The backend server will start at http://localhost:8001 with API documentation available at http://localhost:8001/docs.
+
+> **Alternative Backend Start Method**: If the above command doesn't work, you can try:
+> ```bash
+> python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
+> ```
+
+#### Start the Frontend Development Server
+
+```bash
+# In a new terminal, navigate to the frontend directory
+cd ../frontend
+
+# Start the React development server
 npm start
 ```
 
 The frontend will be available at http://localhost:3000.
 
----
+### Step 6: Access the Application
 
-## 📈 Development Process
+Open your browser and navigate to:
 
-ClearBox was developed following a feature-driven development approach:
+```
+http://localhost:3000
+```
 
-<details>
-<summary>Expand development process details</summary>
+Create a new account or log in with the test user if you created one.
 
-### Phase 1: Foundation
+### Step 7: Troubleshooting Common Issues
 
-1. **Project Setup**:
-   - Set up FastAPI backend with SQLAlchemy ORM
-   - Create React frontend with essential components
-   - Configure development environment
+If you encounter problems with the installation or running the application, here are some common issues and their solutions:
 
-2. **Core Authentication**:
-   - Implement user registration and login
-   - Set up JWT token-based authentication
-   - Create secure password hashing
+#### Backend Issues
 
-3. **Database Design**:
-   - Design normalized database schema
-   - Implement database models
-   - Set up migrations
+1. **Port Conflicts**: If port 8001 is already in use, you can change it in the `.env` file. Remember to update the proxy setting in `frontend/package.json` to match.
 
-### Phase 2: Core Features
+2. **Backend Connection Errors**:
+   - Verify the backend is running by checking `http://localhost:8001/docs` in your browser
+   - Make sure ports match between backend server and frontend proxy setting
+   - Check the backend console for detailed error logs
 
-1. **Contact Management**:
-   - User search functionality
-   - Contact request system
-   - Contact list management
+3. **Database Errors**:
+   - For SQLite: Ensure the backend has write permissions to create the database file
+   - For PostgreSQL: Verify the database exists and credentials are correct
 
-2. **Basic Messaging**:
-   - One-on-one messaging
-   - Message storage and retrieval
-   - Message history
+4. **Python Command Not Found**:
+   - Ensure your virtual environment is activated
+   - Try using `python3` instead of `python` on some systems
 
-3. **UI Implementation**:
-   - Dark-themed UI design
-   - Responsive layout
-   - Navigation system
+#### Frontend Issues
 
-### Phase 3: Advanced Features
+1. **API Connection Problems**:
+   - The most common issue is a port mismatch between backend and frontend
+   - Open browser DevTools (F12) and check the Network tab for failed API requests
+   - Verify in `package.json` that the "proxy" field points to the right backend URL/port
+   - Check for CORS errors in the console
 
-1. **Real-time Communication**:
-   - MQTT integration
-   - Real-time message delivery
-   - Online status indicators
+2. **Login/Signup Failures**:
+   - If you see 500 errors in browser console, check backend logs for details
+   - Verify the backend is running and accessible at the expected port
+   - Check if the API endpoints match between frontend and backend
 
-2. **End-to-End Encryption**:
-   - Encryption key management
-   - Message encryption/decryption
-   - Secure key exchange
+3. **MQTT Connection Issues**:
+   - Ensure the Mosquitto broker is running and WebSocket support is enabled
+   - Verify WebSocket port (9001) is accessible
+   - Check browser console for WebSocket connection errors
 
-3. **Group Conversations**:
-   - Group creation and management
-   - Group messaging
-   - Member permissions
+#### Quick Fix for Common Port Issue
 
-### Phase 4: Polish and Optimization
+If you're experiencing login or API connection issues, the most common problem is a port mismatch. The default configuration in this README uses port 8001, but your system might be configured differently.
 
-1. **Performance Optimization**:
-   - Code refactoring
-   - Query optimization
-   - Caching implementation
+Here's how to identify and fix this:
 
-2. **UX Enhancements**:
-   - Animations and transitions
-   - Keyboard shortcuts
-   - Usability improvements
+1. Check which port your backend is running on (look for "Uvicorn running on http://0.0.0.0:XXXX" in the terminal)
+2. Open `frontend/package.json` and update the "proxy" field to match that port:
+   ```json
+   "proxy": "http://localhost:XXXX"
+   ```
+3. Restart the frontend development server (stop with Ctrl+C, then run `npm start` again)
+
+## 💻 Development Tools & Tips
 
-3. **GDPR Compliance**:
-   - Account deletion
-   - Data export
-   - Privacy policy implementation
-</details>
+### Running Tests
 
----
+```bash
+# Backend tests
+cd backend
+source venv/bin/activate
+pytest
 
-## 🧪 Testing Strategy
+# Frontend tests
+cd frontend
+npm test
+```
 
-ClearBox includes several levels of testing:
+### Building for Production
 
-<details>
-<summary>Expand testing details</summary>
+#### Backend
 
-### Unit Tests
-
-- Backend unit tests using pytest
-- Frontend component tests using Jest and React Testing Library
-
-### Integration Tests
-
-- API integration tests with pytest
-- Frontend integration tests with Cypress
-
-### End-to-End Tests
-
-- Full application flow tests with Cypress
-- Authentication flow tests
-- Messaging flow tests
-</details>
-
----
-
-## 🔌 API Endpoints
-
-<details>
-<summary>Authentication Endpoints</summary>
-
-- `POST /api/signup`: Register a new user
-  - Request: `{ "username": "user1", "email": "user1@example.com", "password": "securepassword" }`
-  - Response: `{ "id": 1, "username": "user1", "email": "user1@example.com" }`
-
-- `POST /api/login`: Get an access token
-  - Request: `{ "username": "user1", "password": "securepassword" }`
-  - Response: `{ "access_token": "eyJhbGc...", "token_type": "bearer" }`
-
-- `GET /api/profile`: Get the current user's profile
-  - Response: `{ "id": 1, "username": "user1", "email": "user1@example.com", "created_at": "2023-01-01T12:00:00" }`
-
-- `DELETE /api/user`: Delete the current user's account
-  - Response: `{ "message": "User account deleted successfully" }`
-</details>
-
-<details>
-<summary>Contacts Endpoints</summary>
-
-- `GET /api/search?query={query}`: Search for users
-  - Response: `[ { "id": 2, "username": "user2" }, ... ]`
-
-- `POST /api/contact/request`: Send a contact request
-  - Request: `{ "recipient_id": 2 }`
-  - Response: `{ "id": 1, "sender_id": 1, "recipient_id": 2, "status": "pending" }`
-
-- `GET /api/contact/requests`: Get pending contact requests
-  - Response: `[ { "id": 1, "sender": { "id": 3, "username": "user3" }, "created_at": "2023-01-01T12:00:00" }, ... ]`
-
-- `POST /api/contact/accept/{request_id}`: Accept a contact request
-  - Response: `{ "message": "Contact request accepted" }`
-
-- `POST /api/contact/deny/{request_id}`: Deny a contact request
-  - Response: `{ "message": "Contact request denied" }`
-
-- `GET /api/contacts`: Get all contacts
-  - Response: `[ { "id": 2, "username": "user2", "online": true, "last_seen": "2023-01-01T12:00:00" }, ... ]`
-</details>
-
-<details>
-<summary>Messages Endpoints</summary>
-
-- `POST /api/messages`: Send a message (to user or group)
-  - Request: `{ "recipient_id": 2, "content": "Hello!", "is_group": false }`
-  - Response: `{ "id": 1, "sender_id": 1, "recipient_id": 2, "content": "encrypted_content", "created_at": "2023-01-01T12:00:00" }`
-
-- `GET /api/messages/user/{user_id}`: Get messages with a specific user
-  - Response: `[ { "id": 1, "sender_id": 1, "recipient_id": 2, "content": "Hello!", "created_at": "2023-01-01T12:00:00", "read": true }, ... ]`
-
-- `GET /api/messages/group/{group_id}`: Get messages from a group
-  - Response: `[ { "id": 2, "sender": { "id": 1, "username": "user1" }, "content": "Hello group!", "created_at": "2023-01-01T12:00:00" }, ... ]`
-
-- `PUT /api/messages/{message_id}/delivered`: Mark a message as delivered
-  - Response: `{ "message": "Message marked as delivered" }`
-
-- `PUT /api/messages/{message_id}/read`: Mark a message as read
-  - Response: `{ "message": "Message marked as read" }`
-</details>
-
-<details>
-<summary>Groups Endpoints</summary>
-
-- `POST /api/group`: Create a new group
-  - Request: `{ "name": "Project Team", "members": [2, 3, 4] }`
-  - Response: `{ "id": 1, "name": "Project Team", "creator_id": 1, "created_at": "2023-01-01T12:00:00" }`
-
-- `POST /api/group/{group_id}/add`: Add a member to a group
-  - Request: `{ "user_id": 5 }`
-  - Response: `{ "message": "User added to group" }`
-
-- `GET /api/groups`: Get all groups the user belongs to
-  - Response: `[ { "id": 1, "name": "Project Team", "member_count": 4 }, ... ]`
-
-- `GET /api/group/{group_id}`: Get detailed information about a group
-  - Response: `{ "id": 1, "name": "Project Team", "members": [ { "id": 1, "username": "user1" }, ... ], "created_at": "2023-01-01T12:00:00" }`
-
-- `DELETE /api/group/{group_id}`: Delete a group
-  - Response: `{ "message": "Group deleted successfully" }`
-</details>
-
-<details>
-<summary>Notifications Endpoints</summary>
-
-- `GET /api/notifications`: Get notification counts
-  - Response: `{ "unread_messages": 5, "contact_requests": 2 }`
-</details>
-
----
-
-## 🔧 Technical Implementation Details
-
-<details>
-<summary>End-to-End Encryption</summary>
-
-ClearBox implements end-to-end encryption using hybrid cryptography:
-
-1. **Key Generation**:
-   - Each user generates an RSA key pair on registration
-   - Public keys are stored on the server
-   - Private keys are encrypted with the user's password and stored locally
-
-2. **Message Encryption**:
-   - Messages are encrypted with AES-256 using a random session key
-   - The session key is encrypted with the recipient's public RSA key
-   - Both the encrypted message and encrypted session key are sent
-
-3. **Message Decryption**:
-   - The recipient decrypts the session key using their private RSA key
-   - The message is then decrypted using the session key
-</details>
-
-<details>
-<summary>Real-time Messaging with MQTT</summary>
-
-The MQTT implementation in ClearBox follows these principles:
-
-1. **Topic Structure**:
-   - Individual topics: `user/{user_id}/messages`
-   - Group topics: `group/{group_id}/messages`
-   - Status topics: `user/{user_id}/status`
-
-2. **Message Format**:
-   - JSON payload with encrypted content
-   - Metadata for message management
-
-3. **Quality of Service**:
-   - QoS 1 (at least once delivery) for messages
-   - QoS 0 (at most once delivery) for status updates
-</details>
-
-<details>
-<summary>Database Schema</summary>
-
-The core database models include:
-
-1. **User**:
-   - id, username, email, password_hash, created_at
-   - Relationships: contacts, messages, groups
-
-2. **Contact**:
-   - id, user_id, contact_id, status, created_at
-   - Status: pending, accepted, blocked
-
-3. **Message**:
-   - id, sender_id, recipient_id, content, is_group, created_at, delivered, read
-   - Content is stored encrypted
-
-4. **Group**:
-   - id, name, creator_id, created_at
-   - Relationships: members, messages
-
-5. **GroupMember**:
-   - id, group_id, user_id, role, joined_at
-   - Role: admin, member
-</details>
-
----
-
-## ❓ Troubleshooting
-
-<details>
-<summary>Backend Issues</summary>
-
-1. **Database Connection Errors**:
-   - Verify PostgreSQL is running: `pg_isready`
-   - Check connection string in .env file
-   - For development, try using SQLite instead
-
-2. **MQTT Connection Issues**:
-   - Verify Mosquitto is running: `systemctl status mosquitto`
-   - Check MQTT broker settings in .env
-   - Test connection with: `mosquitto_sub -t test`
-
-3. **JWT Authentication Issues**:
-   - Verify SECRET_KEY is properly set
-   - Check token expiration time
-   - Clear browser cookies/local storage
-</details>
-
-<details>
-<summary>Frontend Issues</summary>
-
-1. **API Connection Errors**:
-   - Verify API server is running
-   - Check proxy settings in package.json
-   - Verify API URLs in services
-
-2. **MQTT Client Issues**:
-   - Check browser console for WebSocket errors
-   - Verify MQTT broker allows WebSocket connections
-   - Check CORS settings
-
-3. **React Rendering Issues**:
-   - Clear React cache: `npm run start -- --reset-cache`
-   - Check for component key warnings
-   - Look for state management issues
-</details>
-
-<details>
-<summary>Debugging Tips</summary>
-
-1. **Backend Debugging**:
-   - Set log level to DEBUG in main.py
-   - Use FastAPI's built-in `/docs` endpoint
-   - Check application logs
-
-2. **Frontend Debugging**:
-   - Use React DevTools
-   - Enable source maps
-   - Add temporary console.log statements
-</details>
-
----
-
-## 🔒 Security Considerations
-
-<details>
-<summary>Expand security details</summary>
-
-1. **Environment Variables**: Keep your `.env` file secure and never commit it to version control.
-2. **MQTT Security**: In production, configure Mosquitto with proper authentication and TLS.
-3. **JWT Tokens**: Use a strong, random secret key for JWT tokens.
-4. **HTTPS**: In production, always use HTTPS for API and frontend.
-5. **Password Storage**: Always use bcrypt for password hashing.
-6. **SQL Injection**: Use SQLAlchemy's ORM to prevent SQL injection.
-7. **XSS Protection**: Sanitize user input on the frontend.
-8. **CSRF Protection**: Implement CSRF tokens for form submissions.
-9. **Rate Limiting**: Add rate limiting to prevent brute force attacks.
-10. **Content Security Policy**: Implement strict CSP headers.
-</details>
-
----
-
-## 📊 GDPR Compliance
-
-<details>
-<summary>Expand GDPR compliance details</summary>
-
-ClearBox is designed with GDPR compliance in mind:
-
-1. **User Data Control**: Users can delete their accounts and associated data.
-2. **Minimal Data Collection**: Only necessary user information is collected.
-3. **Secure Storage**: Passwords are hashed, messages are encrypted.
-4. **Transparency**: Users have access to all their data.
-5. **Data Portability**: Users can export their data in a common format.
-6. **Consent Management**: Clear consent mechanisms for data usage.
-7. **Breach Notification**: System for detecting and reporting breaches.
-</details>
-
----
-
-## 🚢 Production Deployment
-
-<details>
-<summary>Expand deployment details</summary>
-
-For production deployment, consider the following additional steps:
-
-1. **Use a Production WSGI Server**: Replace the development server with Gunicorn.
+```bash
+# Make sure your virtual environment is activated and requirements are installed
+cd backend
+source venv/bin/activate
+pip install gunicorn  # For production WSGI server
+```
+
+Create a systemd service file (for Linux servers):
+```ini
+[Unit]
+Description=ClearBox Backend
+After=network.target
+
+[Service]
+User=your_username
+Group=your_groupname
+WorkingDirectory=/path/to/clearbox/backend
+Environment="PATH=/path/to/clearbox/backend/venv/bin"
+ExecStart=/path/to/clearbox/backend/venv/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker -b 127.0.0.1:8001 run:app
+
+[Install]
+WantedBy=multi-user.target
+```
+
+#### Frontend
+
+```bash
+# Create optimized production build
+cd frontend
+npm run build
+
+# The build folder will contain static files to be served
+```
+
+### Local Production Simulation
+
+```bash
+# Serve the production build locally
+cd frontend
+npx serve -s build
+```
+
+## 🔐 Security & Privacy Focus
+
+- **Secure Authentication** - JWT-based authentication with secure password hashing
+- **End-to-End Encryption** - Messages encrypted on the client side; server cannot read content
+- **Data Minimization** - Only essential information collected and stored
+- **User Control** - Full ability to delete account and all associated data
+- **Session Management** - Secure token handling with proper expiration
+- **HTTPS** - All communications encrypted in transit
+
+## 📈 Scalability Architecture
+
+ClearBox is designed with scalability in mind:
+
+- **Stateless API** - Horizontally scalable FastAPI backend
+- **Message Broker** - MQTT enables message distribution across multiple server instances
+- **Database Design** - Optimized schema with proper indexing for high-volume queries
+- **Connection Management** - Efficient handling of client connections
+- **Caching Strategy** - Implementation of strategic caching for frequently accessed data
+
+## 📂 Project Structure
+
+```
+clearbox/
+├── backend/               # FastAPI backend server
+│   ├── app/               # Application code
+│   │   ├── routes/        # API endpoints
+│   │   ├── models.py      # Database models
+│   │   └── ...
+│   ├── migrations/        # Database migrations
+│   └── requirements.txt   # Python dependencies
+├── frontend/              # React frontend
+│   ├── src/               # Source code
+│   │   ├── components/    # UI components
+│   │   ├── contexts/      # State management
+│   │   └── services/      # API communication
+│   └── package.json       # Node.js dependencies
+├── scripts/               # Utility scripts
+└── deploy/                # Deployment configuration
+```
+
+## 📦 Deployment Documentation
+
+ClearBox is deployed on AWS EC2 using a t2.micro instance (AWS Free Tier eligible) with the following configuration:
+
+1. **Server Setup**
+   - Amazon Linux 2023 OS
+   - Nginx as reverse proxy
+   - PostgreSQL database
+   - Mosquitto MQTT broker
+
+2. **Domain and SSL**
+   - Domain configured with Route 53
+   - SSL certificate via Let's Encrypt
+   - Automatic HTTP to HTTPS redirection
+
+3. **Application Deployment**
+   - Backend runs as a systemd service
+   - Frontend served as static files through Nginx
+   - API requests proxied to the backend
+   
+4. **Deployment Script**
    ```bash
-   gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
+   # Deploy backend
+   cd ~/ClearBox/clearbox/backend
+   git pull
+   source venv/bin/activate
+   pip install -r requirements.txt
+   sudo systemctl restart clearbox
+   
+   # Deploy frontend
+   cd ~/ClearBox/clearbox/frontend
+   git pull
+   npm install
+   npm run build
+   sudo cp -r build/* /var/www/html/
+   sudo systemctl restart nginx
    ```
 
-2. **Configure HTTPS**: Set up SSL certificates for secure communication.
-   - Use Let's Encrypt for free SSL certificates
-   - Configure proper HSTS headers
+## 📜 GDPR Compliance
 
-3. **MQTT Security**: Configure Mosquitto with user authentication and TLS.
-   - Set up username/password authentication
-   - Configure TLS/SSL for encrypted connections
+ClearBox implements comprehensive data protection measures in line with GDPR requirements:
 
-4. **Database Optimization**: Set up database indexes and optimization.
-   - Add indexes to frequently queried fields
-   - Set up connection pooling
-   - Configure proper backups
+- **Right to Access**: Users can access all their data via the profile interface
+- **Right to be Forgotten**: Account deletion feature permanently removes all user data
+- **Data Portability**: Export feature allows users to download their message history
+- **Consent Management**: Clear opt-in mechanisms for data collection
+- **Minimal Data Processing**: Only essential data is collected and processed
+- **Data Security**: Encryption in transit and at rest protects user information
+- **Breach Notification**: Systems in place to detect and report data breaches
 
-5. **Monitoring**: Implement logging and monitoring solutions.
-   - Set up Prometheus/Grafana for metrics
-   - Configure centralized logging
-   - Set up alerts for critical errors
+## 🆕 Recent Updates
 
-6. **Frontend Optimization**:
-   - Optimize React production build
-   - Set up CDN for static assets
-   - Implement service workers for offline support
+- **March 27, 2025**
+  - Fixed infinite loading issue on the contacts page
+  - Improved error handling when backend is unreachable
+  - Added timeout for loading indicators
+  - Updated API endpoints to use relative URLs
+  - Fixed DNS configuration for the production server
 
-7. **Containerization**:
-   - Create Docker containers for each component
-   - Set up Docker Compose for local deployment
-   - Configure Kubernetes for cloud deployment
-</details>
+- **March 26, 2025**
+  - Implemented end-to-end encryption for all messages
+  - Added group chat functionality
+  - Enhanced UI with animations and transitions
+  - Optimized database queries for better performance
 
----
-
-## 📈 Scalability
+## 📸 Screenshots
 
 <details>
-<summary>Expand scalability details</summary>
+<summary>View Screenshots</summary>
 
-ClearBox is designed to be scalable:
+### Login Screen
+![Login Screen](clearbox/frontend/public/screenshots/login.png)
 
-1. **Horizontal Scaling**: The stateless API can be deployed across multiple servers.
-   - Use a load balancer (nginx, HAProxy)
-   - Configure sticky sessions if needed
+### Chat Interface
+![Chat Interface](clearbox/frontend/public/screenshots/chat.png)
 
-2. **MQTT Clustering**: Mosquitto can be clustered for high availability.
-   - Set up Mosquitto cluster with shared subscriptions
-   - Use a load balancer for MQTT connections
-
-3. **Database Scaling**: PostgreSQL supports various scaling strategies.
-   - Read replicas for heavy read workloads
-   - Connection pooling with PgBouncer
-   - Sharding for very large datasets
-
-4. **Caching Layer**:
-   - Implement Redis for caching frequently accessed data
-   - Cache user presence and status information
-   - Store session data centrally
-
-5. **Microservices**:
-   - Split into microservices for independent scaling
-   - Message service
-   - User service
-   - Notification service
+### Contacts Management
+![Contacts](clearbox/frontend/public/screenshots/contacts.png)
 </details>
-
----
-
-## 👥 Contributing
-
-We welcome contributions to ClearBox! To contribute:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature-name`
-3. Commit your changes: `git commit -m 'Add some feature'`
-4. Push to the branch: `git push origin feature/your-feature-name`
-5. Submit a pull request
-
-Please follow the project's coding style and include appropriate tests.
-
----
 
 ## 📄 License
 
@@ -823,6 +597,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-<p align="center">
-  Made with ❤️ by the ClearBox Team
-</p> 
+© 2025 ClearBox - Created by Imad 
