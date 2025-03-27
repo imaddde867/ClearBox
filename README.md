@@ -10,23 +10,75 @@ ClearBox is a secure, scalable, GDPR-compliant messaging application with end-to
 **[✨ Live Demo: clearbox.live ✨](https://clearbox.live)**
 
 <p align="center">
-  <img src="frontend/logo/vector/default-monochrome-white.svg" alt="ClearBox Logo" width="400"/>
+  <img src="clearbox/frontend/logo/vector/default-monochrome-white.svg" alt="ClearBox Logo" width="400"/>
 </p>
+
+## 📸 Screenshots
+
+### Login Screen
+![Login Screen](clearbox/rontend/public/screenshots/login.png)
+
+### Chat Interface
+![Chat Interface](clearbox/frontend/public/screenshots/chat.png)
+
+### Contacts Management
+![Contacts](clearbox/frontend/public/screenshots/contacts.png)
 
 ## 🚀 Overview
 
 ClearBox is a full-stack secure messaging platform designed with modern security standards and user privacy at its core. The application enables real-time communication between users, supports group conversations, and ensures message delivery even when recipients are offline.
 
-## ✨ Key Features
+## ✨ Core Messaging Capabilities
+
+- **💬 User-to-User Messaging** - Seamless, encrypted communication between two users
+- **👨‍👩‍👧‍👦 Group Chat** - Create and manage conversations with multiple participants simultaneously
+- **📴 Asynchronous Messaging** - Messages are delivered when recipients come online; no message loss
+- **📬 Read Receipts** - Know when your messages have been delivered and read
+- **👀 Online Status** - See when your contacts are active or last seen
+
+## 🛡️ Security & Privacy
 
 - **🔒 End-to-End Encryption** - All messages encrypted using industry-standard cryptography
-- **💬 Real-time Messaging** - Instant message delivery using MQTT protocol
-- **👥 Contact Management** - Search for users, send/accept contact requests
-- **👨‍👩‍👧‍👦 Group Conversations** - Create and manage chat groups with multiple participants
-- **🔔 Notifications** - Real-time notifications for new messages and requests
-- **📴 Offline Message Queue** - Messages sent while recipients are offline are delivered upon reconnection
+- **🔐 Secure Authentication** - JWT-based authentication with secure password hashing
+- **🕵️ Data Minimization** - Only essential information collected and stored
+- **🗑️ Account Deletion** - Full ability to delete account and all associated data
+- **⏲️ Session Management** - Secure token handling with proper expiration
+- **🔐 HTTPS** - All communications encrypted in transit
+- **🛡️ Password Protection** - Strong password hashing using modern algorithms
+
+## 📋 GDPR Compliance
+
+ClearBox implements comprehensive data protection measures in line with GDPR requirements:
+
+- **🔍 Right to Access** - Users can access all their data via the profile interface
+- **🗑️ Right to be Forgotten** - Account deletion feature permanently removes all user data
+- **📤 Data Portability** - Export feature allows users to download their message history
+- **✅ Consent Management** - Clear opt-in mechanisms for data collection
+- **⚖️ Minimal Processing** - Only essential data is collected and processed
+- **🔒 Data Security** - Encryption in transit and at rest protects user information
+- **🚨 Breach Notification** - Systems in place to detect and report data breaches
+
+## 📈 Scalability Architecture
+
+ClearBox is designed with scalability in mind:
+
+- **🌐 Stateless API** - Horizontally scalable FastAPI backend
+- **📨 Message Broker** - MQTT enables message distribution across multiple server instances
+- **🗃️ Database Design** - Optimized schema with proper indexing for high-volume queries
+- **🔌 Connection Management** - Efficient handling of client connections
+- **⚡ Caching Strategy** - Implementation of strategic caching for frequently accessed data
+- **📊 Load Balancing** - Architecture supports distribution across multiple servers
+
+## 🎯 Additional Features
+
+- **🔔 Real-time Notifications** - Instant alerts for new messages and contact requests
+- **😊 Rich Emoji Support** - Express yourself with a comprehensive emoji picker
+- **🎨 Dark Theme** - Modern, eye-friendly interface with sleek design
 - **📱 Responsive Design** - Works seamlessly on both desktop and mobile devices
-- **🌙 Dark Theme** - Modern, eye-friendly interface
+- **🔍 User Search** - Find and connect with other users easily
+- **🖼️ File Sharing** - Share images and files with your contacts
+- **🔗 Link Preview** - Rich previews when sharing URLs in chats
+- **⌨️ Typing Indicators** - See when your contacts are typing
 
 ## 🛠️ Tech Stack
 
@@ -471,25 +523,6 @@ cd frontend
 npx serve -s build
 ```
 
-## 🔐 Security & Privacy Focus
-
-- **Secure Authentication** - JWT-based authentication with secure password hashing
-- **End-to-End Encryption** - Messages encrypted on the client side; server cannot read content
-- **Data Minimization** - Only essential information collected and stored
-- **User Control** - Full ability to delete account and all associated data
-- **Session Management** - Secure token handling with proper expiration
-- **HTTPS** - All communications encrypted in transit
-
-## 📈 Scalability Architecture
-
-ClearBox is designed with scalability in mind:
-
-- **Stateless API** - Horizontally scalable FastAPI backend
-- **Message Broker** - MQTT enables message distribution across multiple server instances
-- **Database Design** - Optimized schema with proper indexing for high-volume queries
-- **Connection Management** - Efficient handling of client connections
-- **Caching Strategy** - Implementation of strategic caching for frequently accessed data
-
 ## 📂 Project Structure
 
 ```
@@ -549,18 +582,6 @@ ClearBox is deployed on AWS EC2 using a t2.micro instance (AWS Free Tier eligibl
    sudo systemctl restart nginx
    ```
 
-## 📜 GDPR Compliance
-
-ClearBox implements comprehensive data protection measures in line with GDPR requirements:
-
-- **Right to Access**: Users can access all their data via the profile interface
-- **Right to be Forgotten**: Account deletion feature permanently removes all user data
-- **Data Portability**: Export feature allows users to download their message history
-- **Consent Management**: Clear opt-in mechanisms for data collection
-- **Minimal Data Processing**: Only essential data is collected and processed
-- **Data Security**: Encryption in transit and at rest protects user information
-- **Breach Notification**: Systems in place to detect and report data breaches
-
 ## 🆕 Recent Updates
 
 - **March 27, 2025**
@@ -575,21 +596,6 @@ ClearBox implements comprehensive data protection measures in line with GDPR req
   - Added group chat functionality
   - Enhanced UI with animations and transitions
   - Optimized database queries for better performance
-
-## 📸 Screenshots
-
-<details>
-<summary>View Screenshots</summary>
-
-### Login Screen
-![Login Screen](clearbox/frontend/public/screenshots/login.png)
-
-### Chat Interface
-![Chat Interface](clearbox/frontend/public/screenshots/chat.png)
-
-### Contacts Management
-![Contacts](clearbox/frontend/public/screenshots/contacts.png)
-</details>
 
 ## 📄 License
 
