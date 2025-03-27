@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create an axios instance with a base URL and common settings
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: '/api',
   // Increase timeout to prevent timeout errors
   timeout: 30000, // Increase from default 10000ms to 30000ms (30 seconds)
   headers: {
@@ -109,7 +109,7 @@ api.interceptors.response.use(
 // Function to test connectivity to the backend
 export const testBackendConnection = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api');
+    const response = await fetch('/api');
     return {
       status: response.status,
       ok: response.ok,
