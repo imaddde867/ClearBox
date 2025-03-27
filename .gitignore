@@ -68,3 +68,5 @@ config.yaml
 *.tmp
 *.temp
 .cache/
+ssh_imad
+ssh_imad.pub
