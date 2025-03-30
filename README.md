@@ -201,7 +201,7 @@ MQTT_PORT=1883
 ENCRYPTION_KEY=generate_another_secure_random_string_here
 
 # Server
-PORT=8001
+PORT=8000
 DEBUG=True
 ```
 
@@ -222,7 +222,7 @@ MQTT_PORT=1883
 ENCRYPTION_KEY=generate_another_secure_random_string_here
 
 # Server
-PORT=8001
+PORT=8000
 DEBUG=False
 ```
 
@@ -337,7 +337,7 @@ Create a `.env` file in the frontend directory:
 
 For development:
 ```
-REACT_APP_API_URL=http://localhost:8001
+REACT_APP_API_URL=http://localhost:8000/api
 REACT_APP_MQTT_URL=ws://localhost:9001
 REACT_APP_ENV=development
 ```
@@ -359,11 +359,11 @@ Open `frontend/package.json` and check that the proxy setting matches your backe
 {
   "name": "clearbox-frontend",
   // ...other settings...
-  "proxy": "http://localhost:8001"
+  "proxy": "http://localhost:8000"
 }
 ```
 
-If your backend runs on a different port (e.g., 8000), update this setting accordingly.
+If your backend runs on a different port, update this setting accordingly.
 
 ### Step 5: Start the Application
 
@@ -381,11 +381,11 @@ python run.py --reload
 python run.py
 ```
 
-The backend server will start at http://localhost:8001 with API documentation available at http://localhost:8001/docs.
+The backend server will start at http://localhost:8000 with API documentation available at http://localhost:8000/docs.
 
 > **Alternative Backend Start Method**: If the above command doesn't work, you can try:
 > ```bash
-> python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
+> python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 > ```
 
 #### Start the Frontend Development Server
@@ -416,16 +416,23 @@ If you encounter problems with the installation or running the application, here
 
 #### Backend Issues
 
-1. **Port Conflicts**: If port 8001 is already in use, you can change it in the `.env` file. Remember to update the proxy setting in `frontend/package.json` to match.
+1. **Port Conflicts**: If port 8000 is already in use, you can change it in the `.env` file. Remember to update the proxy setting in `frontend/package.json` to match.
 
 2. **Backend Connection Errors**:
-   - Verify the backend is running by checking `http://localhost:8001/docs` in your browser
+   - Verify the backend is running by checking `http://localhost:8000/docs` in your browser
    - Make sure ports match between backend server and frontend proxy setting
    - Check the backend console for detailed error logs
 
 3. **Database Errors**:
    - For SQLite: Ensure the backend has write permissions to create the database file
    - For PostgreSQL: Verify the database exists and credentials are correct
+   - Check for missing columns in the database schema. If you encounter errors about missing columns, you may need to run:
+     ```sql
+     ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(255);
+     ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(255);
+     ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT;
+     ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(255);
+     ```
 
 4. **Python Command Not Found**:
    - Ensure your virtual environment is activated
@@ -438,6 +445,7 @@ If you encounter problems with the installation or running the application, here
    - Open browser DevTools (F12) and check the Network tab for failed API requests
    - Verify in `package.json` that the "proxy" field points to the right backend URL/port
    - Check for CORS errors in the console
+   - Make sure `.env` has the correct `REACT_APP_API_URL` value matching your backend port
 
 2. **Login/Signup Failures**:
    - If you see 500 errors in browser console, check backend logs for details
@@ -451,16 +459,20 @@ If you encounter problems with the installation or running the application, here
 
 #### Quick Fix for Common Port Issue
 
-If you're experiencing login or API connection issues, the most common problem is a port mismatch. The default configuration in this README uses port 8001, but your system might be configured differently.
+If you're experiencing login or API connection issues, the most common problem is a port mismatch. 
 
 Here's how to identify and fix this:
 
-1. Check which port your backend is running on (look for "Uvicorn running on http://0.0.0.0:XXXX" in the terminal)
+1. Check which port your backend is running on (look for "Uvicorn running on http://0.0.0.0:8000" in the terminal)
 2. Open `frontend/package.json` and update the "proxy" field to match that port:
    ```json
-   "proxy": "http://localhost:XXXX"
+   "proxy": "http://localhost:8000"
    ```
-3. Restart the frontend development server (stop with Ctrl+C, then run `npm start` again)
+3. Make sure your `.env` file has the correct API URL:
+   ```
+   REACT_APP_API_URL=http://localhost:8000/api
+   ```   
+4. Restart the frontend development server (stop with Ctrl+C, then run `npm start` again)
 
 ## 💻 Development Tools & Tips
 
@@ -499,7 +511,7 @@ User=your_username
 Group=your_groupname
 WorkingDirectory=/path/to/clearbox/backend
 Environment="PATH=/path/to/clearbox/backend/venv/bin"
-ExecStart=/path/to/clearbox/backend/venv/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker -b 127.0.0.1:8001 run:app
+ExecStart=/path/to/clearbox/backend/venv/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker -b 127.0.0.1:8000 run:app
 
 [Install]
 WantedBy=multi-user.target
@@ -581,21 +593,6 @@ ClearBox is deployed on AWS EC2 using a t2.micro instance (AWS Free Tier eligibl
    sudo cp -r build/* /var/www/html/
    sudo systemctl restart nginx
    ```
-
-## 🆕 Recent Updates
-
-- **March 27, 2025**
-  - Fixed infinite loading issue on the contacts page
-  - Improved error handling when backend is unreachable
-  - Added timeout for loading indicators
-  - Updated API endpoints to use relative URLs
-  - Fixed DNS configuration for the production server
-
-- **March 26, 2025**
-  - Implemented end-to-end encryption for all messages
-  - Added group chat functionality
-  - Enhanced UI with animations and transitions
-  - Optimized database queries for better performance
 
 ## 📄 License
 

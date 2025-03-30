@@ -128,7 +128,7 @@ export function AuthProvider({ children }) {
       };
 
       console.log('Signing up new user...');
-      const response = await api.post('/register', signupData);
+      const response = await api.post('/signup', signupData);
       console.log('Signup successful, saving token');
 
       if (response.data.access_token) {
@@ -143,7 +143,10 @@ export function AuthProvider({ children }) {
       return response.data;
     } catch (error) {
       console.error('Signup error:', error);
-      setAuthError(error.response?.data?.detail || 'Failed to create account');
+      // Improved error handling to show the specific error message from the backend
+      const errorDetail = error.response?.data?.detail;
+      console.error('Error detail:', errorDetail);
+      setAuthError(errorDetail || 'Failed to create account. Check if the username or email is already registered.');
       setAuthStatus('error');
       throw error;
     } finally {
