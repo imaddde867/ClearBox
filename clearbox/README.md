@@ -485,6 +485,26 @@ ClearBox is actively being developed with the following enhancements planned for
 Stay tuned for these exciting updates to make your ClearBox experience even better!
 
 
+## 📊 AWS Free Tier Optimization
+
+ClearBox is designed to operate efficiently within AWS Free Tier limits to minimize hosting costs:
+
+- **EC2 Instance:** Uses t2.micro (or t3.micro) instance with 1 vCPU and 1GB RAM, staying within the 750 free hours/month limit
+- **Storage:** Root EBS volume kept under 8GB to minimize costs, with efficient data storage practices
+- **Database:** PostgreSQL database configured to use db.t3.micro instance type with storage under 20GB free tier limit
+- **Docker Containers:** Mosquitto MQTT broker container optimized for minimal resource usage (<5MB memory)
+- **Public IPv4:** Leverages the 750 hours/month of free public IPv4 address allocation
+- **Networking:** Minimal data transfer to stay within free tier data transfer allowances
+
+For new AWS accounts (within first 12 months), this configuration should operate within the free tier limits. After the free tier period expires, the estimated cost would be approximately $15-20 per month based on current pricing.
+
+**Cost-Saving Recommendations:**
+- Schedule automatic instance stop/start during low-usage periods if needed
+- Monitor AWS Billing dashboard regularly
+- Set up billing alerts to prevent unexpected charges
+- Use AWS Cost Explorer to identify potential savings
+
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
