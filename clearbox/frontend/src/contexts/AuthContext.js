@@ -156,16 +156,11 @@ export function AuthProvider({ children }) {
       setAuthStatus('loading');
       setLoading(true);
 
-      // Create form data for OAuth2 password flow
-      const formData = new URLSearchParams();
-      formData.append('username', usernameOrEmail); // Backend expects 'username' field
-      formData.append('password', password);
-
       console.log('Logging in user...');
-      const response = await api.post('/login', formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
+      // Use the /login/email endpoint instead to send JSON
+      const response = await api.post('/login/email', {
+        email: usernameOrEmail,
+        password: password
       });
 
       console.log('Login successful, saving token');

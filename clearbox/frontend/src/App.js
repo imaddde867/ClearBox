@@ -1349,6 +1349,20 @@ const Dashboard = () => {
             ...prevStatus,
             [data.userId]: data.online
           }));
+        } else if (data.type === 'online_users') {
+          // Handle the initial list of online users upon connection
+          const { userIds } = data;
+          const initialOnlineStatus = {};
+          if (Array.isArray(userIds)) {
+            userIds.forEach(id => {
+              initialOnlineStatus[id] = true;
+            });
+          }
+          // Set the initial online status based on the received list
+          // We might receive individual presence updates later for users who connected
+          // after this list was sent, so merge with previous state carefully.
+          // Let's just initialize based on the list for simplicity now.
+          setOnlineStatus(initialOnlineStatus);
         }
       } catch (error) {
         console.error("Error processing presence data:", error);
@@ -1450,6 +1464,20 @@ const Dashboard = () => {
             ...prev,
             [userId]: online
           }));
+        } else if (data.type === 'online_users') {
+          // Handle the initial list of online users upon connection
+          const { userIds } = data;
+          const initialOnlineStatus = {};
+          if (Array.isArray(userIds)) {
+            userIds.forEach(id => {
+              initialOnlineStatus[id] = true;
+            });
+          }
+          // Set the initial online status based on the received list
+          // We might receive individual presence updates later for users who connected
+          // after this list was sent, so merge with previous state carefully.
+          // Let's just initialize based on the list for simplicity now.
+          setOnlineStatus(initialOnlineStatus);
         }
       } catch (error) {
         console.error('Error processing presence data:', error);
