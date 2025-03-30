@@ -121,7 +121,7 @@ export function MessagesProvider({ children }) {
 
     // Connect to WebSocket
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const socket = new WebSocket(`${protocol}//${window.location.hostname}:8000/ws/chat/${token}`);
+    const socket = new WebSocket(`${protocol}//${window.location.host}/ws/chat/${token}`);
 
     socket.onopen = () => {
       console.log('WebSocket connection established');

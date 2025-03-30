@@ -1321,7 +1321,7 @@ const Dashboard = () => {
 
     // Establish WebSocket connection to backend with proper protocol
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const socket = new WebSocket(`${protocol}//${window.location.hostname}:8000/ws/presence/`);
+    const socket = new WebSocket(`${protocol}//${window.location.host}/ws/presence/`);
 
     socket.onopen = () => {
       console.log("WebSocket connection established for presence tracking");
