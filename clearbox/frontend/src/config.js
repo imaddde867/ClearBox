@@ -34,8 +34,10 @@ const API_CONFIG = {
 
 // MQTT configuration
 const MQTT_CONFIG = {
-  // MQTT broker URL - uses environment variable or falls back to local in development
-  BROKER_URL: process.env.REACT_APP_MQTT_URL || 'ws://localhost:9001/mqtt',
+  // MQTT broker URL - uses environment variable or falls back to dynamic location in production
+  BROKER_URL: process.env.REACT_APP_MQTT_URL || 
+    ((window.location.protocol === 'https:' ? 'wss://' : 'ws://') + 
+     window.location.host + '/mqtt'),
   
   // MQTT connection options
   OPTIONS: {
@@ -53,4 +55,4 @@ const MQTT_CONFIG = {
 };
 
 // Export the configuration objects
-export { API_CONFIG, MQTT_CONFIG }; 
+export { API_CONFIG, MQTT_CONFIG };
