@@ -487,23 +487,22 @@ Stay tuned for these exciting updates to make your ClearBox experience even bett
 
 ## 📊 AWS Free Tier Optimization
 
-ClearBox is designed to operate efficiently within AWS Free Tier limits to minimize hosting costs:
+ClearBox is now configured to operate entirely within AWS Free Tier limits with zero cost:
 
-- **EC2 Instance:** Uses t2.micro (or t3.micro) instance with 1 vCPU and 1GB RAM, staying within the 750 free hours/month limit
-- **Storage:** Root EBS volume kept under 8GB to minimize costs, with efficient data storage practices
-- **Database:** PostgreSQL database configured to use db.t3.micro instance type with storage under 20GB free tier limit
-- **Docker Containers:** Mosquitto MQTT broker container optimized for minimal resource usage (<5MB memory)
-- **Public IPv4:** Leverages the 750 hours/month of free public IPv4 address allocation
-- **Networking:** Minimal data transfer to stay within free tier data transfer allowances
+- **EC2 Instance:** Uses t3.micro instance (free for 750 hours/month for 12 months)
+- **Storage:** 8GB EBS volume (free up to 30GB for 12 months)
+- **Database:** Using PostgreSQL on the EC2 instance instead of RDS
+- **DNS Management:** Using domain registrar's free DNS service instead of Route 53
+- **MQTT Broker:** Running in a Docker container on the EC2 instance
+- **Data Transfer:** Optimized to stay within 100GB/month free outbound data
 
-For new AWS accounts (within first 12 months), this configuration should operate within the free tier limits. After the free tier period expires, the estimated cost would be approximately $15-20 per month based on current pricing.
+**Cost Optimization Measures:**
+- Removed all RDS snapshots that were incurring charges
+- Migrated from Route 53 ($0.50/month) to free DNS at the domain registrar
+- Set up billing alarm to notify at $1 threshold
+- EC2 instance configured for optimal free tier resource usage
 
-**Cost-Saving Recommendations:**
-- Schedule automatic instance stop/start during low-usage periods if needed
-- Monitor AWS Billing dashboard regularly
-- Set up billing alerts to prevent unexpected charges
-- Use AWS Cost Explorer to identify potential savings
-
+This configuration ensures ClearBox can run with $0 AWS cost during the 12-month free tier period.
 
 ## 📄 License
 

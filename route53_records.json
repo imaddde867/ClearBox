@@ -1,0 +1,53 @@
+{
+    "ResourceRecordSets": [
+        {
+            "Name": "clearbox.live.",
+            "Type": "A",
+            "TTL": 300,
+            "ResourceRecords": [
+                {
+                    "Value": "51.21.169.163"
+                }
+            ]
+        },
+        {
+            "Name": "clearbox.live.",
+            "Type": "NS",
+            "TTL": 172800,
+            "ResourceRecords": [
+                {
+                    "Value": "ns-669.awsdns-19.net."
+                },
+                {
+                    "Value": "ns-377.awsdns-47.com."
+                },
+                {
+                    "Value": "ns-1838.awsdns-37.co.uk."
+                },
+                {
+                    "Value": "ns-1345.awsdns-40.org."
+                }
+            ]
+        },
+        {
+            "Name": "clearbox.live.",
+            "Type": "SOA",
+            "TTL": 900,
+            "ResourceRecords": [
+                {
+                    "Value": "ns-669.awsdns-19.net. awsdns-hostmaster.amazon.com. 1 7200 900 1209600 86400"
+                }
+            ]
+        },
+        {
+            "Name": "www.clearbox.live.",
+            "Type": "A",
+            "TTL": 300,
+            "ResourceRecords": [
+                {
+                    "Value": "51.21.169.163"
+                }
+            ]
+        }
+    ]
+}
