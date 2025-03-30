@@ -70,3 +70,7 @@ config.yaml
 .cache/
 ssh_imad
 ssh_imad.pub
+
+# Deployment scripts
+deploy.sh
+direct_deploy.sh
