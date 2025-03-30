@@ -15,9 +15,16 @@ import { useMessages } from './contexts/MessagesContext';
 import { useNotifications } from './contexts/NotificationsContext';
 import { useGroups } from './contexts/GroupsContext';
 import GroupChat from './components/GroupChat';
-import Contact from './pages/Contact';
+import ProtectedRoute from './components/ProtectedRoute';
 import api from './services/api';
 import './App.css';
+import Contact from './pages/Contact';
+import About from './pages/About';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import Dashboard from './pages/Dashboard';
+import Signup from './pages/Signup';
+import Login from './pages/Login';
 
 // ScrollToTop component to fix scroll position on page navigation
 function ScrollToTop() {
@@ -159,6 +166,10 @@ const LandingPage = () => {
             <h1>ClearBox</h1>
             <span className="logo-icon">🔒</span>
           </div>
+          <nav className="landing-nav">
+            <Link to="/about">About</Link>
+            <Link to="/contact">Contact</Link>
+          </nav>
           <div className="auth-buttons">
             <Link to="/login" className="button-small">Log In</Link>
             <Link to="/signup" className="button accent">Sign Up</Link>
@@ -318,189 +329,9 @@ const LandingPage = () => {
           </div>
           <div className="footer-bottom">
             <p>&copy; {new Date().getFullYear()} ClearBox. All rights reserved.</p>
-            <div className="footer-links">
-              <Link to="/privacy-policy">Privacy Policy</Link>
-              <Link to="/terms">Terms of Service</Link>
-              <Link to="/about">About</Link>
-              <Link to="/contact">Contact</Link>
-            </div>
           </div>
         </div>
       </footer>
-    </div>
-  );
-};
-
-const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMsg('');
-    setIsLoading(true);
-
-    try {
-      await login(username, password);
-      // Login successful - redirect handled by auth-protected routes
-    } catch (error) {
-      setErrorMsg(error.response?.data?.detail || 'Failed to log in. Please check your credentials.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="auth-container">
-      <div className="auth-card glass">
-        <h2>Log In</h2>
-        {errorMsg && <div className="error-message">{errorMsg}</div>}
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit" className="button" disabled={isLoading}>
-            {isLoading ? 'Logging in...' : 'Log In'}
-          </button>
-        </form>
-        <p className="auth-alternate">
-          Don't have an account? <Link to="/signup">Sign Up</Link>
-        </p>
-      </div>
-    </div>
-  );
-};
-
-const Signup = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [privacyConsent, setPrivacyConsent] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { signup } = useAuth();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    // Validate GDPR consent
-    if (!privacyConsent) {
-      setErrorMsg('You must accept the Privacy Policy to create an account.');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // Include consent information in signup
-      await signup(username, email, password, {
-        privacyConsent,
-        consentTimestamp: new Date().toISOString()
-      });
-      setSuccessMsg('Account created successfully! Redirecting to dashboard...');
-      // Redirect will be handled by auth-protected routes
-    } catch (error) {
-      setErrorMsg(error.response?.data?.detail || 'Failed to create account. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="auth-container">
-      <div className="auth-card glass">
-        <h2>Create Account</h2>
-        {errorMsg && <div className="error-message">{errorMsg}</div>}
-        {successMsg && <div className="success-message">{successMsg}</div>}
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              placeholder="Choose a username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              placeholder="Create a password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          {/* GDPR Consent Checkboxes */}
-          <div className="form-group gdpr-consent">
-            <div className="consent-checkbox">
-              <input
-                type="checkbox"
-                id="privacy-consent"
-                checked={privacyConsent}
-                onChange={(e) => setPrivacyConsent(e.target.checked)}
-              />
-              <label htmlFor="privacy-consent">
-                I have read and agree to the <a href="/privacy-policy" target="_blank">Privacy Policy</a>.
-                We collect your data to provide and improve our services. *
-              </label>
-            </div>
-            <p className="consent-note">* Required field</p>
-          </div>
-
-          <button
-            type="submit"
-            className="button"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Creating account...' : 'Sign Up'}
-          </button>
-        </form>
-        <div className="auth-footer">
-          <p>Already have an account? <Link to="/login">Log in</Link></p>
-        </div>
-      </div>
     </div>
   );
 };
@@ -2420,7 +2251,6 @@ const PrivacyPolicy = () => {
         <div className="privacy-policy-footer">
           <Link to="/login" className="button">Return to Login</Link>
           <Link to="/" className="button-outline">Back to Home</Link>
-          <Link to="/contact" className="button-outline">Contact Us</Link>
         </div>
       </div>
     </div>
@@ -2603,7 +2433,6 @@ const TermsOfService = () => {
         <div className="terms-footer">
           <Link to="/login" className="button">Return to Login</Link>
           <Link to="/" className="button-outline">Back to Home</Link>
-          <Link to="/contact" className="button-outline">Contact Us</Link>
         </div>
       </div>
     </div>
@@ -2844,7 +2673,6 @@ const About = () => {
             <Link to="/">Home</Link>
             <Link to="/privacy-policy">Privacy Policy</Link>
             <Link to="/terms">Terms of Service</Link>
-            <Link to="/contact">Contact</Link>
           </div>
         </div>
       </footer>
@@ -2853,7 +2681,7 @@ const About = () => {
 };
 
 function App() {
-  const { currentUser, loading } = useAuth();
+  const { loading } = useAuth();
 
   if (loading) {
     return (
@@ -2869,14 +2697,21 @@ function App() {
       <ScrollToTop />
       <div className="app">
         <Routes>
-          <Route path="/" element={currentUser ? <Navigate to="/dashboard" /> : <LandingPage />} />
-          <Route path="/login" element={currentUser ? <Navigate to="/dashboard" /> : <Login />} />
-          <Route path="/signup" element={currentUser ? <Navigate to="/dashboard" /> : <Signup />} />
-          <Route path="/dashboard" element={currentUser ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/about" element={<About />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
