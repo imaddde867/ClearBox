@@ -21,6 +21,13 @@ class ConnectionManager:
 
     async def connect(self, user_id: int, websocket: WebSocket):
         await websocket.accept()
+        # Send the list of currently online users to the new connection
+        online_user_ids = list(self.online_users)
+        await websocket.send_text(json.dumps({
+            "type": "online_users",
+            "userIds": online_user_ids
+        }))
+
         self.active_connections[user_id] = websocket
         self.online_users.add(user_id)
         # Broadcast online status to all connected clients
