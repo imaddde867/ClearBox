@@ -74,3 +74,4 @@ ssh_imad.pub
 # Deployment scripts
 deploy.sh
 direct_deploy.sh
+fresh_deploy.sh
