@@ -504,6 +504,20 @@ ClearBox is now configured to operate entirely within AWS Free Tier limits with 
 
 This configuration ensures ClearBox can run with $0 AWS cost during the 12-month free tier period.
 
+## 📚 Resources & References
+
+The development of ClearBox was made possible thanks to the following resources and documentation:
+
+- **FastAPI Documentation** - [https://fastapi.tiangolo.com/](https://fastapi.tiangolo.com/)
+- **React.js Documentation** - [https://reactjs.org/docs/getting-started.html](https://reactjs.org/docs/getting-started.html)
+- **AWS Documentation** - [https://docs.aws.amazon.com/](https://docs.aws.amazon.com/)
+- **PostgreSQL Documentation** - [https://www.postgresql.org/docs/](https://www.postgresql.org/docs/)
+- **SQLAlchemy Documentation** - [https://docs.sqlalchemy.org/](https://docs.sqlalchemy.org/)
+- **MQTT Documentation** - [https://mqtt.org/](https://mqtt.org/)
+- **Python Cryptography Library** - [https://cryptography.io/en/latest/](https://cryptography.io/en/latest/)
+- **Let's Encrypt Documentation** - [https://letsencrypt.org/docs/](https://letsencrypt.org/docs/)
+- **Nginx Documentation** - [https://nginx.org/en/docs/](https://nginx.org/en/docs/)
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
