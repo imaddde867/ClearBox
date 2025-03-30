@@ -454,6 +454,36 @@ ClearBox is deployed on AWS EC2 with the following configuration:
    - Handles logging and process management
 
 
+## 🔮 Upcoming Features
+
+ClearBox is actively being developed with the following enhancements planned for future releases:
+
+- **🔑 Improved Authentication**
+  - Detailed login/register error explanations
+  - Social media authentication options
+  - Two-factor authentication (2FA)
+
+- **📁 File Sharing**
+  - Image and document attachments
+  - File previews and thumbnails
+  - Secure file encryption
+
+- **🎤 Rich Media**
+  - Voice messages
+  - Audio calling
+  - Video chat capabilities
+
+- **🛠️ User Experience**
+  - Message reactions with emoji
+  - Message editing and deletion
+  - Enhanced mobile experience
+
+- **🌍 Internationalization**
+  - Multi-language support
+  - Regional formatting
+
+Stay tuned for these exciting updates to make your ClearBox experience even better!
+
 
 ## 📄 License
 
