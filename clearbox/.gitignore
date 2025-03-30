@@ -97,3 +97,22 @@ coverage.xml
 
 # Migration logs
 migration_*.log 
+# Additional ignores from cleanup
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+frontend/build/*
+!frontend/build/README.md
+.DS_Store
+*.log
+
+# Additional ignores from cleanup
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+frontend/build/*
+!frontend/build/README.md
+.DS_Store
+*.log
