@@ -19,7 +19,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "BROWSER=none react-scripts start",
     "build": "react-scripts build",
     "build:dev": "REACT_APP_API_URL=http://localhost:8000 REACT_APP_MQTT_URL=ws://localhost:9001 react-scripts build",
     "test": "react-scripts test",
@@ -48,5 +48,9 @@
   "devDependencies": {
     "gzip-size": "^7.0.0",
     "source-map-explorer": "^2.5.3"
+  },
+  "homepage": ".",
+  "devServer": {
+    "allowedHosts": "all"
   }
 }
