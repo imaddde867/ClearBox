@@ -1,92 +1,73 @@
 # ClearBox Database Schema
 
-```
-┌─────────────────────────┐       ┌─────────────────────────┐
-│         users           │       │      conversations      │
-├─────────────────────────┤       ├─────────────────────────┤
-│ id: UUID (PK)           │       │ id: UUID (PK)           │
-│ email: VARCHAR          │◄──┐   │ name: VARCHAR           │
-│ name: VARCHAR           │   │   │ created_at: TIMESTAMP   │
-│ password: VARCHAR       │   │   │ updated_at: TIMESTAMP   │
-│ avatar: VARCHAR         │   │   │ is_group: BOOLEAN       │
-│ bio: TEXT               │   │   │ owner_id: UUID (FK)     │────┐
-│ status: VARCHAR         │   │   └─────────────────────────┘    │
-│ last_seen: TIMESTAMP    │   │                                  │
-│ created_at: TIMESTAMP   │   │                                  │
-│ updated_at: TIMESTAMP   │   │                                  │
-└─────────────────────────┘   │                                  │
-                              │                                  │
-┌─────────────────────────┐   │   ┌─────────────────────────┐   │
-│  conversation_members   │   │   │        messages         │   │
-├─────────────────────────┤   │   ├─────────────────────────┤   │
-│ id: UUID (PK)           │   │   │ id: UUID (PK)           │   │
-│ conversation_id: UUID(FK)│───┘   │ conversation_id: UUID(FK)│───┘
-│ user_id: UUID (FK)      │◄──────┐│ sender_id: UUID (FK)    │
-│ joined_at: TIMESTAMP    │       ││ content: TEXT           │
-│ nickname: VARCHAR       │       ││ created_at: TIMESTAMP   │
-│ role: VARCHAR           │       ││ updated_at: TIMESTAMP   │
-└─────────────────────────┘       ││ read: BOOLEAN          │
-                                  ││ encrypted: BOOLEAN      │
-┌─────────────────────────┐       │└─────────────────────────┘
-│      user_contacts      │       │
-├─────────────────────────┤       │
-│ id: UUID (PK)           │       │          
-│ user_id: UUID (FK)      │───────┘          
-│ contact_id: UUID (FK)   │◄──────┐           
-│ created_at: TIMESTAMP   │       │         
-│ nickname: VARCHAR       │       │       
-│ status: VARCHAR         │       │      
-└─────────────────────────┘       │       
-                                  │
-┌─────────────────────────┐       │
-│      notifications      │       │
-├─────────────────────────┤       │
-│ id: UUID (PK)           │       │
-│ user_id: UUID (FK)      │───────┘
-│ type: VARCHAR           │
-│ content: TEXT           │
-│ read: BOOLEAN           │
-│ created_at: TIMESTAMP   │
-│ reference_id: UUID      │
-└─────────────────────────┘
-
-```
+![Database Schema](database.png)
 
 ## Schema Description
 
+The database schema shown in the image above illustrates the relational structure of the ClearBox application's data model. The schema consists of six main tables that work together to support the messaging and user management functionality:
+
 ### Users Table
-- Primary storage for user accounts 
-- Contains authentication credentials (hashed passwords)
-- Tracks user status and last activity time
+- UUID primary key for unique user identification
+- Email and name for user identification
+- Securely hashed password for authentication
+- Avatar URL and bio for profile customization
+- Status field to track user availability (online, offline, away)
+- Last_seen timestamp to record recent activity
+- Created_at and updated_at timestamps for record management
 
 ### Conversations Table
-- Represents chat conversations (1-on-1 or group)
-- Owner references the user who created the conversation
-- Groups are distinguished by the is_group flag
+- UUID primary key for conversation identification
+- Name field for group conversations
+- Is_group boolean flag to distinguish between 1-on-1 and group chats
+- Owner_id as foreign key referencing the user who created the conversation
+- Created_at and updated_at timestamps for record management
 
 ### Conversation Members Table
-- Junction table connecting users to conversations
-- Tracks when a user joined a conversation
-- Stores user-specific settings like nicknames and roles
+- UUID primary key for membership record
+- Conversation_id and user_id foreign keys creating the many-to-many relationship
+- Joined_at timestamp recording when the user joined
+- Nickname field for custom display names within conversations
+- Role field to define user permissions within the conversation (admin, member)
 
 ### Messages Table
-- Stores all messages sent in conversations
-- Tracks read status for message receipts
-- Content is encrypted using the encryption key
+- UUID primary key for message identification
+- Conversation_id and sender_id foreign keys linking messages to conversations and users
+- Content field storing the actual message text
+- Created_at and updated_at timestamps for message history
+- Read boolean flag to track message receipt status
+- Encrypted boolean flag indicating if the content is encrypted
 
 ### User Contacts Table
-- Manages user's contact list
-- Allows custom nicknames for contacts
-- Tracks contact relationship status (pending, accepted, blocked)
+- UUID primary key for contact relationship
+- User_id and contact_id foreign keys connecting users in a contact relationship
+- Created_at timestamp recording when the contact was added
+- Nickname field for custom display names for contacts
+- Status field tracking relationship state (pending, accepted, blocked)
 
 ### Notifications Table
-- Stores system notifications for users
-- Different notification types (message, contact request, etc.)
-- Reference ID can point to related entities
+- UUID primary key for notification identification
+- User_id foreign key identifying the notification recipient
+- Type field categorizing notifications (message, contact_request, etc.)
+- Content field with notification details
+- Read boolean flag tracking if user has seen the notification
+- Created_at timestamp recording when the notification was generated
+- Reference_id UUID linking to related entities (message, conversation, etc.)
 
 ## Security Considerations
 
-- Passwords are hashed with bcrypt
-- Message content is encrypted with Fernet symmetric encryption
+- Passwords are securely hashed before storage
+- Message content can be encrypted as indicated by the encrypted flag
 - Database connections use TLS/SSL
 - Database queries use parameterized statements to prevent SQL injection 
+
+## Relationships
+
+The schema implements several key relationships:
+- Users own conversations (one-to-many)
+- Users participate in conversations through conversation members (many-to-many)
+- Users send messages (one-to-many)
+- Users have contacts with other users (many-to-many)
+- Users receive notifications (one-to-many)
+- Conversations include multiple members (one-to-many)
+- Conversations contain multiple messages (one-to-many)
+- User contacts refer back to users (many-to-one)
