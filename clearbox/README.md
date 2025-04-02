@@ -141,7 +141,17 @@ pip install -r requirements.txt
 
 #### Configure Environment Variables
 
-Create an `.env` file in the backend directory using the template:
+The repository includes a template for environment variables. You can copy it to create your `.env` file:
+
+```bash
+# Copy the template file
+cp .env.template .env
+
+# Edit the .env file to set secure keys
+nano .env  # or use any text editor
+```
+
+The `.env` file should contain:
 
 ```
 # Database Configuration
@@ -154,6 +164,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES=60
 # MQTT Configuration
 MQTT_BROKER=localhost
 MQTT_PORT=1883
+# MQTT_USERNAME=your_mqtt_username  # Uncomment and set if needed
+# MQTT_PASSWORD=your_mqtt_password  # Uncomment and set if needed
 
 # Encryption Configuration
 ENCRYPTION_KEY=generate_another_secure_random_string_here
@@ -228,7 +240,23 @@ Create a `.env` file in the frontend directory:
 ```
 REACT_APP_API_URL=http://localhost:8000/api
 REACT_APP_MQTT_URL=ws://localhost:9001
+HOST=localhost
+PORT=3000
+DANGEROUSLY_DISABLE_HOST_CHECK=true
 ```
+
+Additionally, create a `.env.development` file to ensure proper React development server configuration:
+
+```
+REACT_APP_API_URL=http://localhost:8000/api
+REACT_APP_MQTT_URL=ws://localhost:9001
+WDS_SOCKET_HOST=localhost
+WDS_SOCKET_PORT=3000
+DANGEROUSLY_DISABLE_HOST_CHECK=true
+FAST_REFRESH=true
+```
+
+These environment files ensure that the frontend development server runs correctly and connects to the backend API and MQTT broker.
 
 ### Step 5: Start the Application
 
@@ -255,6 +283,14 @@ cd ../frontend
 npm start
 ```
 
+If you encounter any issues with the development server, try starting it with explicit environment variables:
+
+```bash
+# Alternative approach if the above doesn't work
+cd ../frontend
+HOST=localhost PORT=3000 DANGEROUSLY_DISABLE_HOST_CHECK=true npm start
+```
+
 The frontend will be available at http://localhost:3000.
 
 ### Step 6: Access the Application
@@ -267,7 +303,57 @@ http://localhost:3000
 
 Create a new account or log in with existing credentials.
 
-## 📂 Project Structure
+## 🔧 Troubleshooting
+
+### Frontend Development Server Issues
+
+If you encounter an error like `Invalid options object. Dev Server has been initialized using an options object that does not match the API schema.`:
+
+1. Make sure you've created both `.env` and `.env.development` files as described in the setup instructions
+2. Try running with explicit environment variables:
+   ```bash
+   HOST=localhost PORT=3000 DANGEROUSLY_DISABLE_HOST_CHECK=true npm start
+   ```
+3. Verify that the `package.json` contains the correct configuration for webpack dev server
+
+### Backend Connection Issues
+
+If the frontend can't connect to the backend:
+
+1. Ensure the backend server is running and accessible at http://localhost:8000
+2. Check that your `.env` file has the correct `REACT_APP_API_URL` setting
+3. Verify that CORS is properly configured in the backend's `.env` file
+4. Try accessing the API directly in your browser at http://localhost:8000/api to confirm it's responding
+
+### Backend Dependency Issues
+
+If the backend server fails to start with dependency errors:
+
+1. Ensure you have all required dependencies:
+   ```bash
+   # Make sure the virtual environment is activated
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   
+   # Verify email-validator is installed (required by Pydantic for email validation)
+   pip install email-validator
+   
+   # Reinstall all dependencies if needed
+   pip install -r requirements.txt --force-reinstall
+   ```
+
+2. Check if the SQLite database is created and accessible
+3. Verify that Python 3.8+ is being used (check with `python --version`)
+
+### MQTT Connection Issues
+
+If real-time features aren't working:
+
+1. Make sure the Mosquitto MQTT broker is running with WebSocket support on port 9001
+2. Verify that your `mosquitto.conf` has the correct configuration
+3. Check browser console for any connection errors
+4. Ensure the backend is properly connected to the MQTT broker
+
+## 📄 Project Structure
 
 ```
 clearbox/
