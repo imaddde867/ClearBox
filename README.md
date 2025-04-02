@@ -28,6 +28,23 @@ ClearBox is a secure, scalable, GDPR-compliant messaging application with encryp
 
 ClearBox is a full-stack secure messaging platform designed with modern security standards and user privacy at its core. The application enables real-time communication between users, supports group conversations, and ensures message delivery even when recipients are offline.
 
+## 📊 Data Architecture & Documentation
+
+As a data engineering project, ClearBox maintains comprehensive documentation of its data architecture:
+
+- **Database Schema** - Detailed in `clearbox/docs/database_schema.md`, this document outlines our relational data model with six main tables (Users, Conversations, Conversation Members, Messages, User Contacts, and Notifications) that support the messaging and user management functionality. The schema includes entity relationships, security considerations, and field descriptions.
+
+- **System Architecture** - Documented in `clearbox/docs/system_architecture_diagram.md`, this provides a complete overview of the system's layered architecture:
+  - Client Layer (web browsers and mobile devices)
+  - Presentation Layer (Nginx, load balancing, API gateway)
+  - Application Layer (React frontend, FastAPI backend)
+  - Messaging Layer (MQTT broker for real-time communication)
+  - Data Layer (PostgreSQL database)
+  
+  The documentation includes detailed data flow descriptions showing how user requests are processed through the system layers, authentication mechanisms, and real-time messaging handling.
+
+These documents are essential for understanding the data engineering aspects of ClearBox, including data storage, retrieval patterns, and system interactions.
+
 ## ✨ Core Messaging Capabilities
 
 - **💬 User-to-User Messaging** - Seamless communication between two users with message encryption
@@ -115,7 +132,6 @@ Before beginning the installation, ensure you have the following installed:
 - **MQTT Broker** - For real-time messaging (Mosquitto recommended)
 
 ### Step 1: Clone the Repository
-
 ```bash
 # Clone the repository
 git clone https://github.com/imaddde867/clearbox.git
