@@ -1,12 +1,11 @@
 /**
- * Application Configuration
- * This file contains environment-specific configuration
+ * Application Configuration for Local Development
  */
 
 // API configuration
 const API_CONFIG = {
-  // Base URL for API requests - uses environment variable or falls back to proxy in development
-  BASE_URL: process.env.REACT_APP_API_URL || '',
+  // Base URL for API requests - uses environment variable or falls back to local development
+  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8000',
   
   // API endpoints
   ENDPOINTS: {
@@ -34,10 +33,8 @@ const API_CONFIG = {
 
 // MQTT configuration
 const MQTT_CONFIG = {
-  // MQTT broker URL - uses environment variable or falls back to dynamic location in production
-  BROKER_URL: process.env.REACT_APP_MQTT_URL || 
-    ((window.location.protocol === 'https:' ? 'wss://' : 'ws://') + 
-     window.location.host + '/mqtt'),
+  // MQTT broker URL - for local development
+  BROKER_URL: process.env.REACT_APP_MQTT_URL || 'ws://localhost:9001',
   
   // MQTT connection options
   OPTIONS: {

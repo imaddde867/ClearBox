@@ -21,7 +21,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "build:production": "REACT_APP_API_URL=https://api.your-domain.com REACT_APP_MQTT_URL=wss://mqtt.your-domain.com:8083/mqtt react-scripts build && node fix_css.js",
+    "build:dev": "REACT_APP_API_URL=http://localhost:8000 REACT_APP_MQTT_URL=ws://localhost:9001 react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "analyze": "source-map-explorer 'build/static/js/*.js'"
