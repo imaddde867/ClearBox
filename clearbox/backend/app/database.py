@@ -11,18 +11,17 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-# Get database URL and environment from environment variables
+# Get database URL from environment variables
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./clearbox.db")
-ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
-# Create engine with appropriate settings for different environments
+# Create engine with appropriate settings
 if DATABASE_URL.startswith("sqlite"):
     engine = create_engine(
         DATABASE_URL, connect_args={"check_same_thread": False}
     )
-    logger.info("Using SQLite database (development mode)")
+    logger.info("Using SQLite database")
 elif DATABASE_URL.startswith("postgresql"):
-    # Production PostgreSQL settings
+    # PostgreSQL settings
     engine = create_engine(
         DATABASE_URL,
         pool_size=5,                 # Connection pool size
@@ -30,9 +29,9 @@ elif DATABASE_URL.startswith("postgresql"):
         pool_timeout=30,             # Wait time for connection from pool (seconds)
         pool_recycle=1800,           # Recycle connections after 30 minutes
         pool_pre_ping=True,          # Verify connections before using
-        echo=ENVIRONMENT == "development"  # SQL echo for debugging only in development
+        echo=True                    # SQL echo for debugging
     )
-    logger.info("Using PostgreSQL database (production mode)")
+    logger.info("Using PostgreSQL database")
 else:
     engine = create_engine(DATABASE_URL)
     logger.info(f"Using database: {DATABASE_URL}")

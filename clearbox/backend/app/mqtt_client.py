@@ -3,7 +3,6 @@ from paho.mqtt.publish import multiple
 import json
 import os
 import logging
-import ssl
 from dotenv import load_dotenv
 #from .encryption import encrypt_message, decrypt_message
 
@@ -20,8 +19,6 @@ MQTT_KEEPALIVE = 60
 MQTT_CLIENT_ID = "clearbox_server"
 MQTT_USERNAME = os.getenv("MQTT_USERNAME", None)
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", None)
-MQTT_USE_TLS = os.getenv("MQTT_USE_TLS", "false").lower() == "true"
-ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
 # Global client instance
 mqtt_client = None
@@ -46,10 +43,6 @@ def setup_mqtt_client():
     """Set up and connect to the MQTT broker."""
     global mqtt_client
     
-    if ENVIRONMENT == "development":
-        logger.info("Development mode: Using demo MQTT setup")
-        return True
-    
     # If we already have a client, return it
     if mqtt_client is not None:
         return mqtt_client
@@ -64,25 +57,6 @@ def setup_mqtt_client():
     if MQTT_USERNAME and MQTT_PASSWORD:
         mqtt_client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
         logger.info("MQTT authentication configured")
-
-    # Set up TLS if enabled (required for production)
-    if MQTT_USE_TLS:
-        try:
-            # Configure TLS with server certificate verification
-            mqtt_client.tls_set(
-                ca_certs=None,  # Set to path of CA certificate for verification in production
-                certfile=None,  # Client certificate for mutual TLS (optional)
-                keyfile=None,   # Client key for mutual TLS (optional)
-                cert_reqs=ssl.CERT_REQUIRED,
-                tls_version=ssl.PROTOCOL_TLS,
-                ciphers=None
-            )
-            # Don't verify hostname in development, but do in production
-            mqtt_client.tls_insecure_set(ENVIRONMENT != "production")
-            logger.info("MQTT TLS configured")
-        except Exception as e:
-            logger.error(f"Failed to configure TLS for MQTT: {e}")
-            return False
 
     # Connect to MQTT broker
     try:
@@ -106,10 +80,6 @@ def get_mqtt_client():
 
 def publish_message(topic, message, qos=1, retain=False):
     """Publish a message to an MQTT topic."""
-    if ENVIRONMENT == "development":
-        logger.info(f"Demo: Would publish message to {topic}")
-        return True
-    
     client = get_mqtt_client()
     if not client:
         logger.error("MQTT client not available for publishing")
@@ -118,9 +88,6 @@ def publish_message(topic, message, qos=1, retain=False):
     try:
         if isinstance(message, dict):
             message = json.dumps(message)
-        
-        # In production, you'd encrypt the message here
-        # message = encrypt_message(message)
         
         result = client.publish(topic, message, qos=qos, retain=retain)
         if result.rc != mqtt.MQTT_ERR_SUCCESS:
@@ -135,10 +102,6 @@ def publish_message(topic, message, qos=1, retain=False):
 
 def publish_multiple_messages(messages):
     """Publish multiple messages to various MQTT topics."""
-    if ENVIRONMENT == "development":
-        logger.info(f"Demo: Would publish {len(messages)} messages")
-        return True
-    
     if not messages:
         return True
     
@@ -153,9 +116,6 @@ def publish_multiple_messages(messages):
             
             if isinstance(payload, dict):
                 payload = json.dumps(payload)
-            
-            # In production, you'd encrypt the payload here
-            # payload = encrypt_message(payload)
             
             formatted_messages.append({
                 "topic": topic,
@@ -177,10 +137,6 @@ def publish_multiple_messages(messages):
 
 def subscribe_to_topic(topic, callback=None, qos=1):
     """Subscribe to an MQTT topic."""
-    if ENVIRONMENT == "development":
-        logger.info(f"Demo: Would subscribe to {topic}")
-        return True
-    
     client = get_mqtt_client()
     if not client:
         logger.error("MQTT client not available for subscribing")
@@ -203,10 +159,6 @@ def subscribe_to_topic(topic, callback=None, qos=1):
 
 def unsubscribe_from_topic(topic):
     """Unsubscribe from an MQTT topic."""
-    if ENVIRONMENT == "development":
-        logger.info(f"Demo: Would unsubscribe from {topic}")
-        return True
-    
     client = get_mqtt_client()
     if not client:
         logger.error("MQTT client not available for unsubscribing")
@@ -227,10 +179,6 @@ def unsubscribe_from_topic(topic):
 def cleanup_mqtt():
     """Clean up MQTT resources before shutdown."""
     global mqtt_client
-    
-    if ENVIRONMENT == "development":
-        logger.info("MQTT client cleanup skipped in demo mode")
-        return True
     
     if mqtt_client is None:
         return True
