@@ -17,7 +17,7 @@ email-validator==2.1.0
 gunicorn==21.2.0
 psycopg2-binary==2.9.9  # PostgreSQL adapter
 alembic==1.12.1  # Database migrations
-uvloop==0.17.0  # High-performance event loop
+uvloop==0.21.0  # High-performance event loop
 httptools==0.6.1  # Fast HTTP parsing
 redis==5.0.1  # For caching and session storage (optional)
 
