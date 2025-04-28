@@ -10,7 +10,7 @@ function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { register } = useAuth();
+  const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -35,10 +35,10 @@ function Register() {
     try {
       setError('');
       setLoading(true);
-      await register(username, email, password);
+      await signup(username, email, password);
       navigate('/');
     } catch (err) {
-      console.error('Registration error:', err);
+      console.error('Signup error:', err);
       setError(err.response?.data?.detail || 'Failed to register. Please try again.');
     } finally {
       setLoading(false);
