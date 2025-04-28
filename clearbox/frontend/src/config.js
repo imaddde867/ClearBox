@@ -5,29 +5,30 @@
 // API configuration
 const API_CONFIG = {
   // Base URL for API requests - uses environment variable or falls back to api subdomain
-  BASE_URL: process.env.REACT_APP_API_URL || 'https://api.clearbox.live',
+  BASE_URL: process.env.REACT_APP_API_URL || '',
   
-  // API endpoints
+  // API endpoints - note these should NOT contain /api prefix since it's already in the baseURL
   ENDPOINTS: {
-    LOGIN: '/api/login',
-    SIGNUP: '/api/signup',
-    PROFILE: '/api/profile',
-    CONTACTS: '/api/contacts',
-    CONTACT_REQUEST: '/api/contact/request',
-    CONTACT_REQUESTS: '/api/contact/requests',
-    CONTACT_ACCEPT: '/api/contact/accept',
-    CONTACT_DENY: '/api/contact/deny',
-    SEARCH: '/api/search',
-    MESSAGES: '/api/messages',
-    MESSAGES_USER: (userId) => `/api/messages/user/${userId}`,
-    MESSAGES_GROUP: (groupId) => `/api/messages/group/${groupId}`,
-    MESSAGE_DELIVERED: (messageId) => `/api/messages/${messageId}/delivered`,
-    MESSAGE_READ: (messageId) => `/api/messages/${messageId}/read`,
-    GROUPS: '/api/groups',
-    GROUP: (groupId) => `/api/group/${groupId}`,
-    GROUP_CREATE: '/api/group',
-    GROUP_ADD: (groupId) => `/api/group/${groupId}/add`,
-    NOTIFICATIONS: '/api/notifications',
+    LOGIN: '/login',
+    SIGNUP: '/signup',
+    REGISTER: '/register',  // Add register alias
+    PROFILE: '/profile',
+    CONTACTS: '/contacts',
+    CONTACT_REQUEST: '/contact/request',
+    CONTACT_REQUESTS: '/contact/requests',
+    CONTACT_ACCEPT: '/contact/accept',
+    CONTACT_DENY: '/contact/deny',
+    SEARCH: '/search',
+    MESSAGES: '/messages',
+    MESSAGES_USER: (userId) => `/messages/user/${userId}`,
+    MESSAGES_GROUP: (groupId) => `/messages/group/${groupId}`,
+    MESSAGE_DELIVERED: (messageId) => `/messages/${messageId}/delivered`,
+    MESSAGE_READ: (messageId) => `/messages/${messageId}/read`,
+    GROUPS: '/groups',
+    GROUP: (groupId) => `/group/${groupId}`,
+    GROUP_CREATE: '/group',
+    GROUP_ADD: (groupId) => `/group/${groupId}/add`,
+    NOTIFICATIONS: '/notifications',
   }
 };
 
@@ -64,7 +65,7 @@ const MQTT_CONFIG = {
 // Check environment
 if (process.env.NODE_ENV === 'production') {
   console.log('Running in production mode');
-  console.log(`API URL: ${API_CONFIG.BASE_URL}`);
+  console.log(`API URL: ${API_CONFIG.BASE_URL || 'Using relative URL (via Netlify proxy)'}`);
   console.log(`MQTT Broker: ${MQTT_CONFIG.BROKER_URL}`);
 } else {
   console.log('Running in development mode');
