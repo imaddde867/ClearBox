@@ -1,5 +1,5 @@
 [build]
-  base = "clearbox/frontend/"
+  base = "frontend/"
   publish = "build/"
   command = "npm run build"
 
