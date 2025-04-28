@@ -95,7 +95,7 @@ except Exception as e:
 # Initialize FastAPI app
 app = FastAPI(
     title="ClearBox API",
-    description="Secure messaging API for ClearBox",
+    description="Encrypted messaging API for ClearBox",
     version="1.0.0"
 )
 
@@ -121,17 +121,15 @@ except Exception as e:
     logger.error(f"Failed to set up MQTT client: {e}")
     logger.error(traceback.format_exc())
 
-# Include routers with prefixes
-logger.info("Registering API routes...")
-app.include_router(auth.router, prefix="/api")
+# Include routers with proper prefix
+app.include_router(auth.router, prefix="/api/auth")
 app.include_router(users.router, prefix="/api")
-app.include_router(contacts.router, prefix="/api")
 app.include_router(messages.router, prefix="/api")
+app.include_router(contacts.router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
+app.include_router(websockets.router, prefix="/api")
 app.include_router(groups.router, prefix="/api")
 
-# Include WebSocket router - WebSockets don't use /api prefix
-app.include_router(websockets.router)
 logger.info("API routes registered successfully")
 
 @app.get("/api")
