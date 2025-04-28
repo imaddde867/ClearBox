@@ -6,12 +6,6 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-def get_cors_origins(cors_origins_env: str = None) -> List[str]:
-    """Parse CORS origins from environment variable"""
-    if cors_origins_env is None:
-        cors_origins_env = os.getenv("CORS_ORIGINS", "*")
-    return cors_origins_env.split(",")
-
 class Settings(BaseSettings):
     """Base application settings"""
     # Database
@@ -31,8 +25,8 @@ class Settings(BaseSettings):
     # Encryption
     encryption_key: str = os.getenv("ENCRYPTION_KEY", "dev_encryption_key_change_in_production")
     
-    # CORS - Use the function to parse to List[str] properly
-    cors_origins: List[str] = get_cors_origins()
+    # CORS - simplified to avoid parsing issues
+    cors_origins_str: str = os.getenv("CORS_ORIGINS", "*")
     
     # General
     debug: bool = os.getenv("DEBUG", "false").lower() == "true"
@@ -41,15 +35,23 @@ class Settings(BaseSettings):
     model_config = {
         "env_file": ".env",
     }
+    
+    @property
+    def cors_origins(self) -> List[str]:
+        """Parse CORS origins from environment variable string"""
+        if not self.cors_origins_str:
+            return ["*"]
+        return self.cors_origins_str.split(",")
         
 # Create a global settings object
 try:
     settings = Settings()
+    print(f"Settings initialized: CORS origins = {settings.cors_origins}")
 except Exception as e:
     print(f"Error initializing settings: {e}")
     # Fallback settings with default values
     settings = Settings(
         database_url="sqlite:///./clearbox.db",
-        cors_origins=["*"],
+        cors_origins_str="*",
         debug=True
     ) 
