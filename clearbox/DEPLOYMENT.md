@@ -23,6 +23,7 @@ This document outlines the steps to deploy ClearBox to a production environment 
 3. In the SQL Editor, create your database tables using the SQL provided in the repository
 4. Get your connection string from Settings → Database → Connection string (select "URI")
 5. Save this connection string for the backend deployment
+   - Database URL: `postgresql://postgres:120705imad@db.nnitebsysgmcdhelglqx.supabase.co:5432/postgres`
 
 ## Step 2: MQTT Broker Setup with HiveMQ Cloud
 
@@ -30,9 +31,11 @@ This document outlines the steps to deploy ClearBox to a production environment 
 2. Create a new cluster (the free tier allows 100 concurrent connections)
 3. Create credentials by adding a new user
 4. Note the following details:
-   - Broker URL (e.g., abcdef123456.s2.eu.hivemq.cloud)
-   - Port (8883 for secure MQTT, 8884 for secure WebSockets)
-   - Username and password you created
+   - Broker URL: `beb6c3d91a0e4befbb836d5269d627ea.s1.eu.hivemq.cloud`
+   - Port: `8883` for secure MQTT
+   - WebSocket Port: `8884` for secure WebSockets
+   - Username: `imadeddine200507`
+   - Password: `120705Imad`
 
 ## Step 3: Backend Deployment to Render
 
@@ -42,12 +45,15 @@ This document outlines the steps to deploy ClearBox to a production environment 
 2. Connect to Render and create a new Blueprint instance
 3. Select your GitHub repository
 4. Configure the secret environment variables in the Render dashboard:
-   - `DATABASE_URL` (from Supabase)
-   - `SECRET_KEY` (generate a strong random string)
-   - `MQTT_BROKER` (from HiveMQ)
-   - `MQTT_USERNAME` (from HiveMQ)
-   - `MQTT_PASSWORD` (from HiveMQ)
-   - `ENCRYPTION_KEY` (generate a strong random string)
+   - `DATABASE_URL`: `postgresql://postgres:120705imad@db.nnitebsysgmcdhelglqx.supabase.co:5432/postgres`
+   - `SECRET_KEY`: (generate a strong random string)
+   - `MQTT_BROKER`: `beb6c3d91a0e4befbb836d5269d627ea.s1.eu.hivemq.cloud`
+   - `MQTT_PORT`: `8883`
+   - `MQTT_USERNAME`: `imadeddine200507`
+   - `MQTT_PASSWORD`: `120705Imad`
+   - `MQTT_USE_SSL`: `true`
+   - `ENCRYPTION_KEY`: (generate a strong random string)
+   - `CORS_ORIGINS`: `https://clearbox.live`
 
 ### Option 2: Manual Deployment
 
@@ -60,21 +66,7 @@ This document outlines the steps to deploy ClearBox to a production environment 
    - Build Command: `pip install -r backend/requirements.txt`
    - Start Command: `cd backend && gunicorn app.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker`
    - Select "Free" plan
-5. Add the following environment variables:
-   ```
-   ENVIRONMENT=production
-   PORT=10000
-   DATABASE_URL=postgresql://postgres:[password]@db.xxxx.supabase.co:5432/postgres
-   SECRET_KEY=[your-secret-key]
-   ACCESS_TOKEN_EXPIRE_MINUTES=60
-   MQTT_BROKER=xxxx.s1.eu.hivemq.cloud
-   MQTT_PORT=8883
-   MQTT_USERNAME=[mqtt-username]
-   MQTT_PASSWORD=[mqtt-password]
-   MQTT_USE_SSL=true
-   ENCRYPTION_KEY=[your-encryption-key]
-   CORS_ORIGINS=https://clearbox.live
-   ```
+5. Add the environment variables as listed above
 
 ## Step 4: Frontend Deployment to Netlify
 
@@ -86,9 +78,9 @@ This document outlines the steps to deploy ClearBox to a production environment 
 4. Configure the build settings if needed
 5. Add the following environment variables in the Netlify dashboard:
    - `REACT_APP_API_URL=https://clearbox-api.onrender.com` (your Render backend URL)
-   - `REACT_APP_MQTT_URL=wss://xxxx.s1.eu.hivemq.cloud:8884/mqtt` (your HiveMQ URL)
-   - `REACT_APP_MQTT_USERNAME=[mqtt-username]` (from HiveMQ)
-   - `REACT_APP_MQTT_PASSWORD=[mqtt-password]` (from HiveMQ)
+   - `REACT_APP_MQTT_URL=wss://beb6c3d91a0e4befbb836d5269d627ea.s1.eu.hivemq.cloud:8884/mqtt`
+   - `REACT_APP_MQTT_USERNAME=imadeddine200507`
+   - `REACT_APP_MQTT_PASSWORD=120705Imad`
 
 ### Option 2: Manual Deployment
 
@@ -115,13 +107,30 @@ This document outlines the steps to deploy ClearBox to a production environment 
 1. Visit your site at `https://clearbox.live`
 2. Test login, registration, and messaging features
 3. Check that backend is accessible at `https://api.clearbox.live/api`
-4. Monitor logs in Netlify and Render for any errors
+4. Verify MQTT connections are working by checking browser console logs
+5. Monitor logs in Netlify and Render for any errors
+
+## MQTT Testing
+
+To test your MQTT connection:
+
+1. Open the browser console on your deployed site
+2. Log in to your application
+3. Look for logs like "MQTT client connected" and "Subscribed to user/{userId}/messages"
+4. Send messages between two browsers/users and verify they're delivered via MQTT
+5. If messages are not being delivered, check:
+   - MQTT credential configuration in the frontend
+   - Network connectivity to HiveMQ (check browser network tab)
+   - Any errors in the browser console
 
 ## Troubleshooting
 
 - **CORS errors**: Check the CORS_ORIGINS environment variable in your backend
 - **Database connection issues**: Verify the DATABASE_URL is correct and that the IP is whitelisted in Supabase
 - **MQTT connection problems**: Check that the MQTT credentials and URL are correct
+  - Confirm WebSocket connection port 8884 is used for browser connections
+  - Verify SSL is enabled for the connection
+  - Try connecting with an MQTT test client to isolate issues
 - **API endpoints not found**: Ensure the REACT_APP_API_URL is set correctly in frontend environment variables
 
 ## Scaling Beyond Free Tier
@@ -137,4 +146,5 @@ When your application grows:
 1. Regularly rotate secrets and API keys
 2. Enable two-factor authentication on all services
 3. Set up automated security scanning of your codebase
-4. Configure proper Content Security Policy in your Netlify configuration 
+4. Configure proper Content Security Policy in your Netlify configuration
+5. For production use, replace hardcoded MQTT credentials with proper environment variables 
