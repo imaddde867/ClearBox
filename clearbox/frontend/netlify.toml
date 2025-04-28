@@ -9,10 +9,10 @@
   to = "/index.html"
   status = 200
 
-# API redirect to handle API requests - explicitly target the Render backend
+# API redirect to handle API requests - fix backend path issue
 [[redirects]]
   from = "/api/*"
-  to = "https://clearbox-api.onrender.com/api/:splat"
+  to = "https://clearbox-api.onrender.com/:splat"
   status = 200
   force = true
   # Add debugging headers to track redirects
