@@ -12,7 +12,7 @@
 # Environment variables will be set in Netlify UI
 [build.environment]
   NODE_VERSION = "16"
-  REACT_APP_API_URL = "https://clearbox-api.onrender.com"
+  REACT_APP_API_URL = "https://api.clearbox.live"
   REACT_APP_MQTT_URL = "wss://beb6c3d91a0e4befbb836d5269d627ea.s1.eu.hivemq.cloud:8884/mqtt"
 
 # Force HTTPS
@@ -24,4 +24,4 @@
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "no-referrer-when-downgrade"
-    Content-Security-Policy = "default-src 'self'; connect-src 'self' https://clearbox-api.onrender.com wss: https:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: https:;" 
+    Content-Security-Policy = "default-src 'self'; connect-src 'self' https://clearbox-api.onrender.com https://api.clearbox.live wss: https:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; img-src 'self' data: https:;" 
