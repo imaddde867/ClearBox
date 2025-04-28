@@ -4,8 +4,8 @@
 
 // API configuration
 const API_CONFIG = {
-  // Base URL for API requests - uses environment variable or falls back to local development
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8000',
+  // Base URL for API requests - uses environment variable or falls back to api subdomain
+  BASE_URL: process.env.REACT_APP_API_URL || 'https://api.clearbox.live',
   
   // API endpoints
   ENDPOINTS: {
