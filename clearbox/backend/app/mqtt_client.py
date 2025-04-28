@@ -5,6 +5,7 @@ import os
 import logging
 import ssl
 import time
+import threading
 from dotenv import load_dotenv
 #from .encryption import encrypt_message, decrypt_message
 
@@ -17,24 +18,68 @@ logger = logging.getLogger(__name__)
 # MQTT Configuration
 MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
-MQTT_KEEPALIVE = 60
+MQTT_KEEPALIVE = 60  # Seconds
 MQTT_CLIENT_ID = "clearbox_server"
 MQTT_USERNAME = os.getenv("MQTT_USERNAME", None)
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", None)
 MQTT_USE_SSL = os.getenv("MQTT_USE_SSL", "false").lower() == "true"
 # Reconnection parameters
 MQTT_RECONNECT_DELAY = 5  # seconds between reconnection attempts
+# Keep-alive topic
+MQTT_KEEPALIVE_TOPIC = "clearbox/server/keepalive"
+MQTT_KEEPALIVE_INTERVAL = 5  # seconds between keep-alive messages
 
 # Global client instance
 mqtt_client = None
+keep_alive_timer = None
+is_connected = False
+
+def send_keepalive():
+    """Send a keep-alive message periodically to maintain the connection"""
+    global keep_alive_timer, is_connected
+    
+    if not is_connected:
+        logger.debug("Not sending keep-alive because not connected")
+        return
+    
+    try:
+        # Publish a keep-alive message
+        if mqtt_client:
+            result = mqtt_client.publish(
+                MQTT_KEEPALIVE_TOPIC, 
+                json.dumps({"timestamp": time.time(), "status": "alive"}),
+                qos=0,
+                retain=False
+            )
+            if result.rc == mqtt.MQTT_ERR_SUCCESS:
+                logger.debug("Keep-alive message sent successfully")
+            else:
+                logger.warning(f"Failed to send keep-alive message, result: {result.rc}")
+    except Exception as e:
+        logger.error(f"Error sending keep-alive message: {e}")
+    
+    # Schedule the next keep-alive
+    keep_alive_timer = threading.Timer(MQTT_KEEPALIVE_INTERVAL, send_keepalive)
+    keep_alive_timer.daemon = True
+    keep_alive_timer.start()
 
 def on_connect(client, userdata, flags, rc):
     """Callback when client connects to the MQTT broker."""
+    global is_connected
+    
     if rc == 0:
         logger.info(f"Connected to MQTT Broker: {MQTT_BROKER}")
         # Reset reconnect counter on successful connection
         client._reconnect_count = 0
+        is_connected = True
+        
+        # Subscribe to the server topics
+        client.subscribe(f"clearbox/server/#")
+        
+        # Start sending keep-alive messages
+        send_keepalive()
     else:
+        is_connected = False
         error_messages = {
             1: "Connection refused - incorrect protocol version",
             2: "Connection refused - invalid client identifier",
@@ -47,7 +92,14 @@ def on_connect(client, userdata, flags, rc):
 
 def on_disconnect(client, userdata, rc):
     """Callback when client disconnects from the MQTT broker."""
+    global is_connected
+    
+    is_connected = False
     logger.info(f"Disconnected from MQTT Broker with result code: {rc}")
+    
+    # Cancel any pending keep-alive
+    if keep_alive_timer:
+        keep_alive_timer.cancel()
     
     # If this is an unexpected disconnect, attempt to reconnect
     if rc != 0:
@@ -79,11 +131,14 @@ def setup_mqtt_client():
     if mqtt_client is not None:
         return mqtt_client
 
-    # Create MQTT client
-    mqtt_client = mqtt.Client(client_id=MQTT_CLIENT_ID)
+    # Create MQTT client with clean session=False to maintain subscriptions across reconnects
+    mqtt_client = mqtt.Client(client_id=MQTT_CLIENT_ID, clean_session=False)
     mqtt_client.on_connect = on_connect
     mqtt_client.on_disconnect = on_disconnect
     mqtt_client.on_message = on_message
+    
+    # Set up automatic reconnect options
+    mqtt_client.reconnect_delay_set(min_delay=1, max_delay=60)
     
     # Initialize reconnect counter
     mqtt_client._reconnect_count = 0
@@ -230,7 +285,11 @@ def unsubscribe_from_topic(topic):
 
 def cleanup_mqtt():
     """Clean up MQTT resources before shutdown."""
-    global mqtt_client
+    global mqtt_client, keep_alive_timer
+    
+    # Cancel any pending keep-alive
+    if keep_alive_timer:
+        keep_alive_timer.cancel()
     
     if mqtt_client is None:
         return True
