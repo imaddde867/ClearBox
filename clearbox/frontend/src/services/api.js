@@ -1,13 +1,17 @@
 import axios from 'axios';
 
-// Get API URL from environment variable, default to relative path for production
+// Get API URL from environment variable, default to empty string for relative paths in production
 const API_URL = process.env.REACT_APP_API_URL || '';
 
-// Create an axios instance with a base URL and common settings
+// Determine if we're using absolute URLs or relative ones
+const isAbsoluteUrl = API_URL.startsWith('http') || API_URL.startsWith('https');
+
+// Create an axios instance with the correct base URL
+// If absolute URL is used, we connect directly to the API server
+// If relative URL is used, we connect through the Netlify proxy
 const api = axios.create({
-  baseURL: `${API_URL}/api`,
-  // Increase timeout to prevent timeout errors
-  timeout: 30000, // Increase from default 10000ms to 30000ms (30 seconds)
+  baseURL: isAbsoluteUrl ? `${API_URL}/api` : '/api',
+  timeout: 30000, // 30 seconds
   headers: {
     'Content-Type': 'application/json',
   }
@@ -18,7 +22,7 @@ const logTokenStatus = () => {
   const token = localStorage.getItem('token');
   console.log(`Token status: ${token ? 'Present' : 'Missing'} - ${new Date().toISOString()}`);
   if (process.env.NODE_ENV === 'production') {
-    console.log(`Running in production mode. API URL: ${API_URL}`);
+    console.log(`Running in production mode. API URL: ${isAbsoluteUrl ? API_URL : 'Using relative URL (via Netlify proxy)'}`);
   } else {
     console.log(`Running in development mode. API URL: ${API_URL || 'Using relative URL'}`);
   }
@@ -117,16 +121,19 @@ api.interceptors.response.use(
 // Function to test connectivity to the backend
 export const testBackendConnection = async () => {
   try {
-    const response = await fetch(`${API_URL}/api`);
+    // Use the configured api instance to make the request
+    const response = await api.get('/');
     return {
       status: response.status,
-      ok: response.ok,
-      statusText: response.statusText
+      ok: response.status >= 200 && response.status < 300,
+      statusText: response.statusText,
+      data: response.data
     };
   } catch (error) {
     return {
       error: error.message,
-      status: 'failed'
+      status: 'failed',
+      response: error.response?.data
     };
   }
 };

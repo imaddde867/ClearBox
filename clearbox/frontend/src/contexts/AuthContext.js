@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api';
+import { API_CONFIG } from '../config';
 
 const AuthContext = createContext();
 
@@ -76,7 +77,7 @@ export function AuthProvider({ children }) {
       setAuthStatus('loading');
       setLoading(true);
       console.log('Fetching user profile...');
-      const response = await api.get('/profile');
+      const response = await api.get(API_CONFIG.ENDPOINTS.PROFILE);
       console.log('Profile loaded successfully');
       setCurrentUser(response.data);
       setAuthStatus('success');
@@ -124,23 +125,36 @@ export function AuthProvider({ children }) {
         username,
         email,
         password,
+        full_name: consentData.full_name || username,
         ...consentData
       };
 
       console.log('Signing up new user...');
-      const response = await api.post('/register', signupData);
-      console.log('Signup successful, saving token');
+      // Try register endpoint first, fall back to signup if needed
+      try {
+        const response = await api.post(API_CONFIG.ENDPOINTS.REGISTER, signupData);
+        console.log('Signup successful via /register, saving token');
 
-      if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
-        await loadUserProfile();
-      } else {
-        console.error('No token received during signup');
-        throw new Error('Authentication failed: No token received');
+        if (response.data.access_token) {
+          localStorage.setItem('token', response.data.access_token);
+          await loadUserProfile();
+          setAuthStatus('success');
+          return response.data;
+        }
+      } catch (registerError) {
+        console.log('Register endpoint failed, trying signup endpoint');
+        const response = await api.post(API_CONFIG.ENDPOINTS.SIGNUP, signupData);
+        console.log('Signup successful via /signup, saving token');
+
+        if (response.data.access_token) {
+          localStorage.setItem('token', response.data.access_token);
+          await loadUserProfile();
+          setAuthStatus('success');
+          return response.data;
+        }
       }
 
-      setAuthStatus('success');
-      return response.data;
+      throw new Error('Authentication failed: No token received');
     } catch (error) {
       console.error('Signup error:', error);
       // Improved error handling to show the specific error message from the backend

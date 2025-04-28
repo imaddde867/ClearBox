@@ -9,6 +9,13 @@
   to = "/index.html"
   status = 200
 
+# API redirect to handle API requests directly
+[[redirects]]
+  from = "/api/*"
+  to = "https://api.clearbox.live/api/:splat"
+  status = 200
+  force = true
+
 # Environment variables will be set in Netlify UI
 [build.environment]
   NODE_VERSION = "16"
