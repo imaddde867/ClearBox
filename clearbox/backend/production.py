@@ -13,6 +13,15 @@ class ProductionSettings(Settings):
     encryption_key: str = os.environ.get("ENCRYPTION_KEY")
     cors_origins_str: str = os.environ.get("CORS_ORIGINS", "https://clearbox.live")
     
+    @property
+    def database_url(self) -> str:
+        """Get the database URL, handling potential format issues with passwords containing special characters"""
+        raw_url = os.environ.get("DATABASE_URL")
+        # Return the raw URL if not provided
+        if not raw_url:
+            return None
+        return raw_url
+    
     # For compatibility with older Pydantic versions
     def dict(self):
         """
