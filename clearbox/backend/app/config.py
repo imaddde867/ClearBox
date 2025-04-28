@@ -37,10 +37,7 @@ class Settings(BaseSettings):
     # General
     debug: bool = os.getenv("DEBUG", "false").lower() == "true"
 
-    class Config:
-        env_file = ".env"
-        
-    # For compatibility with pydantic-settings
+    # For compatibility with pydantic-settings v2
     model_config = {
         "env_file": ".env",
     }
