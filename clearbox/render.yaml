@@ -5,8 +5,10 @@ services:
     region: ohio
     plan: free
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: cd backend && gunicorn app.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker
+    startCommand: cd backend && gunicorn app.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --timeout 120 --keep-alive 65
     healthCheckPath: /api
+    healthCheckTimeout: 30
+    # Network optimization
     envVars:
       - key: ENVIRONMENT
         value: production
@@ -19,7 +21,7 @@ services:
       - key: SECRET_KEY
         sync: false
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
-        value: 60
+        value: 120
       - key: MQTT_BROKER
         sync: false
       - key: MQTT_PORT
@@ -30,8 +32,18 @@ services:
         sync: false
       - key: MQTT_USE_SSL
         value: true
+      - key: MQTT_CLIENT_ID_PREFIX
+        value: clearbox_server_prod
+      - key: MQTT_KEEPALIVE
+        value: 120
       - key: ENCRYPTION_KEY
         sync: false
       - key: CORS_ORIGINS
         value: https://clearbox.live
-    autoDeploy: true 
+      - key: GUNICORN_CMD_ARGS
+        value: "--access-logfile=- --error-logfile=- --log-level=info --capture-output"
+    autoDeploy: true
+    # Configure resource usage to be more stable
+    scaling:
+      minInstances: 1
+      maxInstances: 1 

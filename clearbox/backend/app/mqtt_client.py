@@ -8,6 +8,7 @@ import time
 import threading
 from dotenv import load_dotenv
 #from .encryption import encrypt_message, decrypt_message
+import socket
 
 load_dotenv()
 
@@ -18,8 +19,8 @@ logger = logging.getLogger(__name__)
 # MQTT Configuration
 MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
-MQTT_KEEPALIVE = 60  # Seconds
-MQTT_CLIENT_ID = "clearbox_server"
+MQTT_KEEPALIVE = 120  # Increased from 60 to 120 seconds
+MQTT_CLIENT_ID = f"clearbox_server_{int(time.time())}"  # Add timestamp to make ID unique
 MQTT_USERNAME = os.getenv("MQTT_USERNAME", None)
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", None)
 MQTT_USE_SSL = os.getenv("MQTT_USE_SSL", "false").lower() == "true"
@@ -27,12 +28,13 @@ MQTT_USE_SSL = os.getenv("MQTT_USE_SSL", "false").lower() == "true"
 MQTT_RECONNECT_DELAY = 5  # seconds between reconnection attempts
 # Keep-alive topic
 MQTT_KEEPALIVE_TOPIC = "clearbox/server/keepalive"
-MQTT_KEEPALIVE_INTERVAL = 5  # seconds between keep-alive messages
+MQTT_KEEPALIVE_INTERVAL = 30  # Increased from 5 to 30 seconds
 
 # Global client instance
 mqtt_client = None
 keep_alive_timer = None
 is_connected = False
+reconnect_count = 0  # Track reconnection attempts
 
 def send_keepalive():
     """Send a keep-alive message periodically to maintain the connection"""
@@ -48,7 +50,7 @@ def send_keepalive():
             result = mqtt_client.publish(
                 MQTT_KEEPALIVE_TOPIC, 
                 json.dumps({"timestamp": time.time(), "status": "alive"}),
-                qos=0,
+                qos=0,  # Use QoS 0 for keepalive to reduce overhead
                 retain=False
             )
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
@@ -65,19 +67,19 @@ def send_keepalive():
 
 def on_connect(client, userdata, flags, rc):
     """Callback when client connects to the MQTT broker."""
-    global is_connected
+    global is_connected, reconnect_count
     
     if rc == 0:
         logger.info(f"Connected to MQTT Broker: {MQTT_BROKER}")
         # Reset reconnect counter on successful connection
-        client._reconnect_count = 0
+        reconnect_count = 0
         is_connected = True
         
         # Subscribe to the server topics
-        client.subscribe(f"clearbox/server/#")
+        client.subscribe(f"clearbox/server/#", qos=1)
         
-        # Start sending keep-alive messages
-        send_keepalive()
+        # Start sending keep-alive messages after a short delay
+        threading.Timer(2.0, send_keepalive).start()
     else:
         is_connected = False
         error_messages = {
@@ -92,7 +94,7 @@ def on_connect(client, userdata, flags, rc):
 
 def on_disconnect(client, userdata, rc):
     """Callback when client disconnects from the MQTT broker."""
-    global is_connected
+    global is_connected, reconnect_count
     
     is_connected = False
     logger.info(f"Disconnected from MQTT Broker with result code: {rc}")
@@ -103,20 +105,43 @@ def on_disconnect(client, userdata, rc):
     
     # If this is an unexpected disconnect, attempt to reconnect
     if rc != 0:
-        logger.warning("Unexpected disconnection, will attempt to reconnect")
-        # Increment reconnect counter
-        if not hasattr(client, '_reconnect_count'):
-            client._reconnect_count = 0
-        client._reconnect_count += 1
+        # Protocol error 7 is common with HiveMQ - log more details
+        if rc == 7:
+            logger.warning("Disconnected with protocol error (code 7). This might be due to packet size, connection limits, or network issues.")
+        else:
+            logger.warning(f"Unexpected disconnection with code {rc}, will attempt to reconnect")
         
-        # Attempt reconnection with backoff
-        reconnect_delay = min(MQTT_RECONNECT_DELAY * client._reconnect_count, 60)  # Cap at 60 seconds
-        logger.info(f"Attempting reconnection in {reconnect_delay} seconds (attempt {client._reconnect_count})")
-        time.sleep(reconnect_delay)
-        try:
-            client.reconnect()
-        except Exception as e:
-            logger.error(f"Failed to reconnect: {e}")
+        # Increment reconnect counter
+        reconnect_count += 1
+        
+        # Use exponential backoff for reconnection attempts
+        reconnect_delay = min(MQTT_RECONNECT_DELAY * (2 ** min(reconnect_count - 1, 4)), 60)  # Cap at 60 seconds
+        logger.info(f"Attempting reconnection in {reconnect_delay} seconds (attempt {reconnect_count})")
+        
+        # Don't block the callback thread, schedule reconnection
+        threading.Timer(reconnect_delay, reconnect_client).start()
+
+def reconnect_client():
+    """Attempt to reconnect the MQTT client"""
+    global mqtt_client
+    
+    if mqtt_client is None:
+        logger.error("Cannot reconnect: MQTT client is None")
+        return
+        
+    try:
+        # If too many reconnection attempts, recreate the client
+        if reconnect_count > 5:
+            logger.info("Too many reconnection attempts, recreating MQTT client")
+            cleanup_mqtt()
+            setup_mqtt_client()
+        else:
+            logger.info("Attempting to reconnect existing client")
+            mqtt_client.reconnect()
+    except Exception as e:
+        logger.error(f"Failed to reconnect: {e}")
+        # Schedule another attempt
+        threading.Timer(MQTT_RECONNECT_DELAY, reconnect_client).start()
 
 def on_message(client, userdata, msg):
     """Callback when a message is received."""
@@ -127,21 +152,32 @@ def setup_mqtt_client():
     """Set up and connect to the MQTT broker."""
     global mqtt_client
     
-    # If we already have a client, return it
+    # If we already have a client, clean it up first
     if mqtt_client is not None:
-        return mqtt_client
+        try:
+            mqtt_client.loop_stop()
+            mqtt_client.disconnect()
+        except:
+            pass  # Ignore errors during cleanup
 
-    # Create MQTT client with clean session=False to maintain subscriptions across reconnects
-    mqtt_client = mqtt.Client(client_id=MQTT_CLIENT_ID, clean_session=False)
+    # Create MQTT client with clean session=True to avoid stale session data
+    # This helps with protocol errors when reconnecting
+    mqtt_client = mqtt.Client(
+        client_id=MQTT_CLIENT_ID, 
+        clean_session=True,
+        protocol=mqtt.MQTTv311  # Explicitly use v3.1.1 protocol
+    )
+    
     mqtt_client.on_connect = on_connect
     mqtt_client.on_disconnect = on_disconnect
     mqtt_client.on_message = on_message
     
-    # Set up automatic reconnect options
+    # Set up automatic reconnect options - disabled in favor of our custom reconnect
     mqtt_client.reconnect_delay_set(min_delay=1, max_delay=60)
     
-    # Initialize reconnect counter
-    mqtt_client._reconnect_count = 0
+    # Disable the paho-mqtt automatic reconnect to use our own implementation
+    mqtt_client.reconnect_delay_set(min_delay=1, max_delay=1)  # Minimal delay
+    mqtt_client._reconnect_on_failure = False
 
     # Set up authentication if provided
     if MQTT_USERNAME and MQTT_PASSWORD:
@@ -150,17 +186,36 @@ def setup_mqtt_client():
     
     # Configure SSL/TLS if enabled
     if MQTT_USE_SSL:
-        mqtt_client.tls_set(
-            certfile=None,
-            keyfile=None,
-            cert_reqs=ssl.CERT_REQUIRED,
-            tls_version=ssl.PROTOCOL_TLS,
-            ciphers=None
-        )
-        logger.info("MQTT SSL/TLS configured")
+        try:
+            # Use a more specific SSL context with modern ciphers
+            context = ssl.create_default_context()
+            context.check_hostname = True
+            context.verify_mode = ssl.CERT_REQUIRED
+            
+            mqtt_client.tls_set_context(context)
+            # Set additional TLS options to prevent protocol errors
+            mqtt_client.tls_insecure_set(False)
+            logger.info("MQTT SSL/TLS configured with secure defaults")
+        except Exception as e:
+            logger.error(f"Error configuring TLS: {e}")
+            # Fallback to basic TLS setup
+            mqtt_client.tls_set(
+                certfile=None,
+                keyfile=None,
+                cert_reqs=ssl.CERT_REQUIRED,
+                tls_version=ssl.PROTOCOL_TLS,
+                ciphers=None
+            )
+            logger.info("MQTT SSL/TLS configured with fallback options")
 
     # Connect to MQTT broker
     try:
+        # Set socket options to prevent network errors
+        mqtt_client.socket_options = (
+            (socket.SOL_TCP, socket.TCP_NODELAY, 1),  # Disable Nagle's algorithm
+            (socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)  # Enable TCP keepalive
+        )
+        
         mqtt_client.connect(MQTT_BROKER, MQTT_PORT, MQTT_KEEPALIVE)
         # Start the loop in a separate thread
         mqtt_client.loop_start()
