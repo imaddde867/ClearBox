@@ -1,9 +1,16 @@
 from pydantic_settings import BaseSettings
 import os
+from typing import List
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+
+def get_cors_origins(cors_origins_env: str = None) -> List[str]:
+    """Parse CORS origins from environment variable"""
+    if cors_origins_env is None:
+        cors_origins_env = os.getenv("CORS_ORIGINS", "*")
+    return cors_origins_env.split(",")
 
 class Settings(BaseSettings):
     """Base application settings"""
@@ -24,8 +31,8 @@ class Settings(BaseSettings):
     # Encryption
     encryption_key: str = os.getenv("ENCRYPTION_KEY", "dev_encryption_key_change_in_production")
     
-    # CORS
-    cors_origins: list = os.getenv("CORS_ORIGINS", "*").split(",")
+    # CORS - Use the function to parse to List[str] properly
+    cors_origins: List[str] = get_cors_origins()
     
     # General
     debug: bool = os.getenv("DEBUG", "false").lower() == "true"
@@ -33,5 +40,19 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         
+    # For compatibility with pydantic-settings
+    model_config = {
+        "env_file": ".env",
+    }
+        
 # Create a global settings object
-settings = Settings() 
+try:
+    settings = Settings()
+except Exception as e:
+    print(f"Error initializing settings: {e}")
+    # Fallback settings with default values
+    settings = Settings(
+        database_url="sqlite:///./clearbox.db",
+        cors_origins=["*"],
+        debug=True
+    ) 
