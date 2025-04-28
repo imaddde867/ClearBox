@@ -146,6 +146,17 @@ def root():
         "db_type": "PostgreSQL" if "postgresql" in settings.database_url else "SQLite"
     }
 
+@app.get("/")
+def index():
+    """
+    Root endpoint for the application
+    """
+    return {
+        "message": "Welcome to ClearBox API",
+        "documentation": "/docs",
+        "api_status": "/api"
+    }
+
 if __name__ == "__main__":
     # Get port from environment variable or use default
     port = int(os.getenv("PORT", 8000))

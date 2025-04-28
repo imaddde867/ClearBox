@@ -3,6 +3,8 @@ from paho.mqtt.publish import multiple
 import json
 import os
 import logging
+import ssl
+import time
 from dotenv import load_dotenv
 #from .encryption import encrypt_message, decrypt_message
 
@@ -19,6 +21,9 @@ MQTT_KEEPALIVE = 60
 MQTT_CLIENT_ID = "clearbox_server"
 MQTT_USERNAME = os.getenv("MQTT_USERNAME", None)
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", None)
+MQTT_USE_SSL = os.getenv("MQTT_USE_SSL", "false").lower() == "true"
+# Reconnection parameters
+MQTT_RECONNECT_DELAY = 5  # seconds between reconnection attempts
 
 # Global client instance
 mqtt_client = None
@@ -27,12 +32,39 @@ def on_connect(client, userdata, flags, rc):
     """Callback when client connects to the MQTT broker."""
     if rc == 0:
         logger.info(f"Connected to MQTT Broker: {MQTT_BROKER}")
+        # Reset reconnect counter on successful connection
+        client._reconnect_count = 0
     else:
-        logger.error(f"Failed to connect to MQTT Broker: {MQTT_BROKER}, return code {rc}")
+        error_messages = {
+            1: "Connection refused - incorrect protocol version",
+            2: "Connection refused - invalid client identifier",
+            3: "Connection refused - server unavailable",
+            4: "Connection refused - bad username or password",
+            5: "Connection refused - not authorized"
+        }
+        error_msg = error_messages.get(rc, f"Unknown error code: {rc}")
+        logger.error(f"Failed to connect to MQTT Broker: {MQTT_BROKER}, {error_msg}")
 
 def on_disconnect(client, userdata, rc):
     """Callback when client disconnects from the MQTT broker."""
     logger.info(f"Disconnected from MQTT Broker with result code: {rc}")
+    
+    # If this is an unexpected disconnect, attempt to reconnect
+    if rc != 0:
+        logger.warning("Unexpected disconnection, will attempt to reconnect")
+        # Increment reconnect counter
+        if not hasattr(client, '_reconnect_count'):
+            client._reconnect_count = 0
+        client._reconnect_count += 1
+        
+        # Attempt reconnection with backoff
+        reconnect_delay = min(MQTT_RECONNECT_DELAY * client._reconnect_count, 60)  # Cap at 60 seconds
+        logger.info(f"Attempting reconnection in {reconnect_delay} seconds (attempt {client._reconnect_count})")
+        time.sleep(reconnect_delay)
+        try:
+            client.reconnect()
+        except Exception as e:
+            logger.error(f"Failed to reconnect: {e}")
 
 def on_message(client, userdata, msg):
     """Callback when a message is received."""
@@ -52,11 +84,25 @@ def setup_mqtt_client():
     mqtt_client.on_connect = on_connect
     mqtt_client.on_disconnect = on_disconnect
     mqtt_client.on_message = on_message
+    
+    # Initialize reconnect counter
+    mqtt_client._reconnect_count = 0
 
     # Set up authentication if provided
     if MQTT_USERNAME and MQTT_PASSWORD:
         mqtt_client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
         logger.info("MQTT authentication configured")
+    
+    # Configure SSL/TLS if enabled
+    if MQTT_USE_SSL:
+        mqtt_client.tls_set(
+            certfile=None,
+            keyfile=None,
+            cert_reqs=ssl.CERT_REQUIRED,
+            tls_version=ssl.PROTOCOL_TLS,
+            ciphers=None
+        )
+        logger.info("MQTT SSL/TLS configured")
 
     # Connect to MQTT broker
     try:
@@ -128,7 +174,13 @@ def publish_multiple_messages(messages):
         if MQTT_USERNAME and MQTT_PASSWORD:
             auth = {"username": MQTT_USERNAME, "password": MQTT_PASSWORD}
         
-        multiple(formatted_messages, hostname=MQTT_BROKER, port=MQTT_PORT, auth=auth)
+        # Add TLS config for multiple() call if needed
+        tls = None
+        if MQTT_USE_SSL:
+            tls = {'cert_reqs': ssl.CERT_REQUIRED, 
+                   'tls_version': ssl.PROTOCOL_TLS}
+        
+        multiple(formatted_messages, hostname=MQTT_BROKER, port=MQTT_PORT, auth=auth, tls=tls)
         logger.info(f"Published {len(formatted_messages)} messages")
         return True
     except Exception as e:
