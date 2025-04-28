@@ -360,3 +360,33 @@ def get_chat_messages(
     Get messages exchanged with a specific user (alias for get_user_messages)
     """
     return get_user_messages(user_id, 50, db, current_user)
+
+@router.post("/messages/user/{user_id}", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+def send_message_to_user(
+    user_id: int,
+    message_data: dict,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Send a message to a specific user using the /messages/user/{user_id} endpoint
+    that the frontend is using
+    """
+    content = message_data.get("content")
+    
+    if not content:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Message content is required"
+        )
+    
+    # Create a MessageCreate object
+    message = MessageCreate(
+        receiver_id=user_id,
+        group_id=None,
+        content=content
+    )
+    
+    # Pass to the main send_message function
+    return send_message(message, background_tasks, db, current_user)
