@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: clearbox-api
+    env: python
+    region: ohio
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && gunicorn app.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker
+    healthCheckPath: /api
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 60
+      - key: MQTT_BROKER
+        sync: false
+      - key: MQTT_PORT
+        value: 8883
+      - key: MQTT_USERNAME
+        sync: false
+      - key: MQTT_PASSWORD
+        sync: false
+      - key: MQTT_USE_SSL
+        value: true
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://clearbox.live
+    autoDeploy: true 

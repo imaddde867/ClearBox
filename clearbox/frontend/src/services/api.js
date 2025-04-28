@@ -1,8 +1,11 @@
 import axios from 'axios';
 
+// Get API URL from environment variable, default to relative path for production
+const API_URL = process.env.REACT_APP_API_URL || '';
+
 // Create an axios instance with a base URL and common settings
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: `${API_URL}/api`,
   // Increase timeout to prevent timeout errors
   timeout: 30000, // Increase from default 10000ms to 30000ms (30 seconds)
   headers: {
@@ -14,6 +17,11 @@ const api = axios.create({
 const logTokenStatus = () => {
   const token = localStorage.getItem('token');
   console.log(`Token status: ${token ? 'Present' : 'Missing'} - ${new Date().toISOString()}`);
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`Running in production mode. API URL: ${API_URL}`);
+  } else {
+    console.log(`Running in development mode. API URL: ${API_URL || 'Using relative URL'}`);
+  }
 };
 
 // Add request logging for debugging
@@ -109,7 +117,7 @@ api.interceptors.response.use(
 // Function to test connectivity to the backend
 export const testBackendConnection = async () => {
   try {
-    const response = await fetch('/api');
+    const response = await fetch(`${API_URL}/api`);
     return {
       status: response.status,
       ok: response.ok,

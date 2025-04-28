@@ -1,5 +1,5 @@
 /**
- * Application Configuration for Local Development
+ * Application Configuration
  */
 
 // API configuration
@@ -33,7 +33,7 @@ const API_CONFIG = {
 
 // MQTT configuration
 const MQTT_CONFIG = {
-  // MQTT broker URL - for local development
+  // MQTT broker URL - use environment variable or default
   BROKER_URL: process.env.REACT_APP_MQTT_URL || 'ws://localhost:9001',
   
   // MQTT connection options
@@ -41,6 +41,12 @@ const MQTT_CONFIG = {
     keepalive: 30,
     connectTimeout: 10000,
     clean: true,
+    // For production HiveMQ connection
+    ...(process.env.NODE_ENV === 'production' && {
+      username: process.env.REACT_APP_MQTT_USERNAME,
+      password: process.env.REACT_APP_MQTT_PASSWORD,
+      ssl: true
+    })
   },
   
   // Topic patterns
@@ -50,6 +56,15 @@ const MQTT_CONFIG = {
     USER_STATUS: (userId) => `user/${userId}/status`,
   }
 };
+
+// Check environment
+if (process.env.NODE_ENV === 'production') {
+  console.log('Running in production mode');
+  console.log(`API URL: ${API_CONFIG.BASE_URL}`);
+  console.log(`MQTT Broker: ${MQTT_CONFIG.BROKER_URL}`);
+} else {
+  console.log('Running in development mode');
+}
 
 // Export the configuration objects
 export { API_CONFIG, MQTT_CONFIG };
