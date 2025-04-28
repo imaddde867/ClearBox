@@ -21,16 +21,31 @@ load_dotenv()
 # Configure production settings if in production
 if os.getenv("ENVIRONMENT", "development") == "production":
     try:
-        # Try to import production settings
+        # Try to import production settings using the absolute import path
+        sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         from production import ProductionSettings
         production_settings = ProductionSettings()
-        # Update the settings
-        for key, value in production_settings.dict().items():
+        
+        # Update the settings - handle both Pydantic v1 and v2 versions
+        try:
+            # Pydantic v2 uses model_dump()
+            settings_dict = production_settings.model_dump()
+        except AttributeError:
+            try:
+                # Pydantic v1 used dict()
+                settings_dict = production_settings.dict()
+            except AttributeError as e:
+                logging.error(f"Failed to convert settings to dict: {e}")
+                settings_dict = {}
+                
+        # Update settings with the values from production_settings
+        for key, value in settings_dict.items():
             if value is not None:  # Only update if the value is not None
                 setattr(settings, key, value)
+                
         logging.info("Using production settings")
-    except ImportError:
-        logging.warning("Production settings not found, using default settings")
+    except ImportError as e:
+        logging.warning(f"Production settings not found, using default settings. Error: {e}")
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG if settings.debug else logging.INFO)

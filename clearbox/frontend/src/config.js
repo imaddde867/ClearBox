@@ -34,7 +34,10 @@ const API_CONFIG = {
 // MQTT configuration
 const MQTT_CONFIG = {
   // MQTT broker URL - use environment variable or default
-  BROKER_URL: process.env.REACT_APP_MQTT_URL || 'ws://localhost:9001',
+  BROKER_URL: process.env.REACT_APP_MQTT_URL || 
+    (process.env.NODE_ENV === 'production' 
+      ? 'wss://beb6c3d91a0e4befbb836d5269d627ea.s1.eu.hivemq.cloud:8884/mqtt'
+      : 'ws://localhost:9001'),
   
   // MQTT connection options
   OPTIONS: {
@@ -43,9 +46,10 @@ const MQTT_CONFIG = {
     clean: true,
     // For production HiveMQ connection
     ...(process.env.NODE_ENV === 'production' && {
-      username: process.env.REACT_APP_MQTT_USERNAME,
-      password: process.env.REACT_APP_MQTT_PASSWORD,
-      ssl: true
+      username: process.env.REACT_APP_MQTT_USERNAME || 'imadeddine200507',
+      password: process.env.REACT_APP_MQTT_PASSWORD || '120705Imad',
+      ssl: true,
+      protocolVersion: 5
     })
   },
   

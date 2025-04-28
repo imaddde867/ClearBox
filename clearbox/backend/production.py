@@ -11,3 +11,9 @@ class ProductionSettings(Settings):
     secret_key: str = os.environ.get("SECRET_KEY")
     encryption_key: str = os.environ.get("ENCRYPTION_KEY")
     cors_origins: list = os.environ.get("CORS_ORIGINS", "https://clearbox.live").split(",")
+    
+    def dict(self):
+        """
+        Compatibility method for older code using dict() instead of model_dump()
+        """
+        return self.model_dump()

@@ -1,6 +1,8 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import api from '../services/api';
 import { useAuth } from './AuthContext';
+import mqttService from '../services/mqtt';
+import { MQTT_CONFIG } from '../config';
 
 const MessagesContext = createContext();
 
@@ -14,8 +16,7 @@ export function MessagesProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeChat, setActiveChat] = useState(null);
-  const [websocket, setWebsocket] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const [mqttConnected, setMqttConnected] = useState(false);
 
   // Add a ref to track if messages are loaded for a given chat
   const loadedChatsRef = useRef(new Set());
@@ -108,84 +109,108 @@ export function MessagesProvider({ children }) {
     }
   };
 
-  // Set up WebSocket connection when user logs in
+  // Set up MQTT connection when user logs in
   useEffect(() => {
     if (!currentUser || !currentUser.id) return;
 
     // Get token from localStorage
     const token = localStorage.getItem('token');
     if (!token) {
-      console.error('No authentication token available for WebSocket connection');
+      console.error('No authentication token available for MQTT connection');
       return;
     }
 
-    // Connect to WebSocket
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const socket = new WebSocket(`${protocol}//${window.location.host}/ws/chat/${token}`);
+    console.log('Setting up MQTT connection for user:', currentUser.id);
 
-    socket.onopen = () => {
-      console.log('WebSocket connection established');
-      setIsConnected(true);
-      setWebsocket(socket);
-    };
+    // Initialize MQTT connection
+    mqttService.initializeMQTT(currentUser.id, token)
+      .then(() => {
+        console.log('MQTT connection initialized successfully');
+      })
+      .catch(error => {
+        console.error('Failed to initialize MQTT connection:', error);
+      });
 
-    socket.onclose = () => {
-      console.log('WebSocket connection closed');
-      setIsConnected(false);
-      setWebsocket(null);
+    // Subscribe to connection status changes
+    const unsubscribeStatus = mqttService.onConnectionStatus(isConnected => {
+      console.log('MQTT connection status changed:', isConnected);
+      setMqttConnected(isConnected);
+    });
 
-      // Try to reconnect after a delay
-      setTimeout(() => {
-        console.log('Attempting to reconnect WebSocket...');
-        // The effect will run again, creating a new connection
-      }, 5000);
-    };
-
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('Received WebSocket message:', data);
-
-        // Dispatch event to the window so App.js can also process it
-        const customEvent = new CustomEvent('ws-message', { detail: data });
-        window.dispatchEvent(customEvent);
-
-        // Handle different message types
-        if (data.type === 'message') {
-          // Direct message received
-          handleIncomingMessage(data);
-        } else if (data.type === 'group_message') {
-          // Group message received
-          handleIncomingGroupMessage(data);
-        } else if (data.type === 'presence') {
-          // Presence update (online/offline status)
-          console.log(`User ${data.userId} is ${data.online ? 'online' : 'offline'}`);
-          // We don't handle this here as it's managed in App.js
-        }
-      } catch (error) {
-        console.error('Error processing WebSocket message:', error);
+    // Subscribe to message events
+    const unsubscribeMessages = mqttService.onMessage((topic, data) => {
+      console.log(`Message received on topic ${topic}:`, data);
+      
+      // Handle user messages
+      if (topic.startsWith('user/') && topic.endsWith('/messages')) {
+        handleIncomingMessage(data);
       }
-    };
+      // Handle group messages
+      else if (topic.startsWith('group/') && topic.endsWith('/messages')) {
+        handleIncomingGroupMessage(data);
+      }
+    });
+
+    // Subscribe to additional topics as needed
+    if (activeChat) {
+      // Subscribe to active chat topic
+      const chatTopic = activeChat.isGroup 
+        ? MQTT_CONFIG.TOPICS.GROUP_MESSAGES(activeChat.id)
+        : MQTT_CONFIG.TOPICS.USER_MESSAGES(activeChat.id);
+      
+      mqttService.subscribeTopic(chatTopic)
+        .catch(error => {
+          console.error(`Failed to subscribe to ${chatTopic}:`, error);
+        });
+    }
 
     // Set up ping interval to keep connection alive
     const pingInterval = setInterval(() => {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ type: 'ping' }));
+      if (mqttService.isConnected()) {
+        // Send a ping message to keep the connection alive
+        mqttService.publishMessage('ping', JSON.stringify({ 
+          type: 'ping', 
+          userId: currentUser.id,
+          timestamp: new Date().toISOString()
+        })).catch(error => {
+          console.error('Failed to send ping:', error);
+        });
       }
     }, 30000); // every 30 seconds
 
     // Clean up on unmount or user change
     return () => {
       clearInterval(pingInterval);
-      if (socket) {
-        socket.close();
-      }
+      unsubscribeStatus();
+      unsubscribeMessages();
+      mqttService.disconnectMQTT();
     };
   }, [currentUser]);
+
+  // Subscribe to active chat topic when activeChat changes
+  useEffect(() => {
+    if (!currentUser || !activeChat || !mqttConnected) return;
+
+    // Determine topic based on chat type
+    const chatTopic = activeChat.isGroup 
+      ? MQTT_CONFIG.TOPICS.GROUP_MESSAGES(activeChat.id)
+      : MQTT_CONFIG.TOPICS.USER_MESSAGES(activeChat.id);
+    
+    console.log(`Subscribing to active chat topic: ${chatTopic}`);
+    
+    mqttService.subscribeTopic(chatTopic)
+      .catch(error => {
+        console.error(`Failed to subscribe to ${chatTopic}:`, error);
+      });
+
+    return () => {
+      // Unsubscribe from topic when component unmounts or activeChat changes
+      mqttService.unsubscribeTopic(chatTopic)
+        .catch(error => {
+          console.error(`Failed to unsubscribe from ${chatTopic}:`, error);
+        });
+    };
+  }, [currentUser, activeChat, mqttConnected]);
 
   // Handle incoming direct message
   const handleIncomingMessage = (data) => {
@@ -243,14 +268,6 @@ export function MessagesProvider({ children }) {
 
       return newState;
     });
-
-    // Acknowledge receipt
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-      websocket.send(JSON.stringify({
-        type: 'read_message',
-        messageId
-      }));
-    }
   };
 
   // Handle incoming group message
@@ -333,244 +350,224 @@ export function MessagesProvider({ children }) {
     }
   }, [activeChat]);
 
-  // Send message function
+  // Modify sendMessage to use MQTT instead of WebSocket when possible
   const sendMessage = async (recipientId, content) => {
-    if (!recipientId || !content || !content.trim() || !currentUser) {
-      throw new Error('Missing required data to send message');
+    if (!currentUser || !content.trim()) {
+      console.error('Cannot send message: no user or empty content');
+      return null;
     }
 
+    // Generate a temporary ID for the message
+    const tempMessageId = `temp_${new Date().getTime()}_${Math.random().toString(36).substring(2, 9)}`;
+    const timestamp = new Date().toISOString();
+
+    // Create a new message object
+    const newMessage = {
+      id: tempMessageId,
+      sender_id: currentUser.id,
+      receiver_id: recipientId,
+      content: content,
+      timestamp: timestamp,
+      status: 'sending',
+      is_read: false,
+      // Add any other properties your message objects have
+    };
+
+    // Optimistically add to state
+    setMessages(prev => {
+      const existingMessages = prev[recipientId] || [];
+      return {
+        ...prev,
+        [recipientId]: [...existingMessages, newMessage]
+      };
+    });
+
     try {
-      const payload = {
-        receiver_id: recipientId,
-        content: content.trim()
-      };
-
-      // Create a consistent timestamp for the optimistic message
-      const now = new Date();
-      const isoTimestamp = now.toISOString();
-
-      // Add optimistic update for immediate UI feedback
-      const tempId = `temp-${Date.now()}`;
-      const optimisticMessage = {
-        id: tempId,
-        content: content.trim(),
-        sender_id: currentUser.id,
-        receiver_id: recipientId,
-        timestamp: isoTimestamp,
-        created_at: isoTimestamp,
-        delivered: false,
-        decrypted: true,
-        preserve_content: true,
-        pending: true
-      };
-
-      // Add the optimistic message to state
-      setMessages(prev => {
-        const existingMessages = prev[recipientId] || [];
-
-        // Add new message to existing ones
-        const updatedMessages = [...existingMessages, optimisticMessage];
-
-        // Sort messages by timestamp in ascending order (oldest first)
-        updatedMessages.sort((a, b) => {
-          // Ensure we have standard date objects for comparison
-          const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
-          const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
-          return timeA - timeB;
-        });
-
-        return {
-          ...prev,
-          [recipientId]: updatedMessages
+      // Attempt to send via MQTT if connected
+      if (mqttConnected) {
+        // Publish to the recipient's topic
+        const recipientTopic = MQTT_CONFIG.TOPICS.USER_MESSAGES(recipientId);
+        
+        // Create the message payload
+        const payload = {
+          type: 'message',
+          messageId: tempMessageId,
+          senderId: currentUser.id,
+          recipientId: recipientId,
+          content: content,
+          timestamp: timestamp
         };
-      });
-
-      // Send message to server
-      const response = await api.post('/messages', payload);
-
-      // Update the message with the real ID and remove pending status
-      if (response && response.data && response.data.id) {
+        
+        // Send via MQTT
+        await mqttService.publishMessage(recipientTopic, payload);
+        
+        // Update status to 'sent' in local state
         setMessages(prev => {
-          const updatedMessages = (prev[recipientId] || []).map(msg =>
-            msg.id === tempId ? {
-              ...msg,
-              id: response.data.id,
-              timestamp: response.data.created_at || msg.timestamp, // Use server timestamp if available
-              created_at: response.data.created_at || msg.created_at,
-              pending: false
-            } : msg
-          );
-
-          // Ensure messages are sorted by timestamp
-          updatedMessages.sort((a, b) => {
-            // Ensure we have standard date objects for comparison
-            const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
-            const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
-            return timeA - timeB;
-          });
-
+          const chatMessages = prev[recipientId] || [];
           return {
             ...prev,
-            [recipientId]: updatedMessages
+            [recipientId]: chatMessages.map(msg => 
+              msg.id === tempMessageId 
+                ? { ...msg, status: 'sent', timestamp: timestamp }
+                : msg
+            )
           };
         });
-
-        // Save message content to localStorage for content preservation
-        try {
-          const savedMessages = JSON.parse(localStorage.getItem('preservedMessages') || '{}');
-          savedMessages[response.data.id] = { id: response.data.id, content: content.trim() };
-          localStorage.setItem('preservedMessages', JSON.stringify(savedMessages));
-        } catch (e) {
-          console.error('Error saving message to localStorage', e);
+        
+        console.log('Message sent via MQTT');
+      } else {
+        // Fall back to REST API
+        const response = await api.post(`/messages/user/${recipientId}`, {
+          content: content
+        });
+        
+        // Update the message in state with the server response
+        if (response.data && response.data.id) {
+          setMessages(prev => {
+            const chatMessages = prev[recipientId] || [];
+            return {
+              ...prev,
+              [recipientId]: chatMessages.map(msg => 
+                msg.id === tempMessageId 
+                  ? { ...msg, id: response.data.id, status: 'sent', timestamp: response.data.timestamp || timestamp }
+                  : msg
+              )
+            };
+          });
         }
+        
+        console.log('Message sent via REST API');
       }
-
-      return response?.data;
+      
+      return true;
     } catch (error) {
       console.error('Error sending message:', error);
-
-      // Update the optimistic message to show error state
+      
+      // Update status to 'failed' in local state
       setMessages(prev => {
-        const updatedMessages = (prev[recipientId] || []).map(msg =>
-          msg.pending ? {
-            ...msg,
-            error: true,
-            errorMessage: error?.response?.data?.detail || 'Failed to send'
-          } : msg
-        );
-
-        // Ensure messages are sorted by timestamp
-        updatedMessages.sort((a, b) => {
-          // Ensure we have standard date objects for comparison
-          const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
-          const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
-          return timeA - timeB;
-        });
-
+        const chatMessages = prev[recipientId] || [];
         return {
           ...prev,
-          [recipientId]: updatedMessages
+          [recipientId]: chatMessages.map(msg => 
+            msg.id === tempMessageId 
+              ? { ...msg, status: 'failed' }
+              : msg
+          )
         };
       });
-
-      throw error;
+      
+      return false;
     }
   };
 
-  // Add a function to send group messages
+  // Similarly modify sendGroupMessage to use MQTT
   const sendGroupMessage = async (groupId, content) => {
-    if (!groupId || !content || !content.trim() || !currentUser) {
-      throw new Error('Missing required data to send group message');
+    if (!currentUser || !content.trim()) {
+      console.error('Cannot send group message: no user or empty content');
+      return null;
     }
 
+    // Generate a temporary ID for the message
+    const tempMessageId = `temp_${new Date().getTime()}_${Math.random().toString(36).substring(2, 9)}`;
+    const timestamp = new Date().toISOString();
+    const chatKey = `group-${groupId}`;
+
+    // Create a new message object
+    const newMessage = {
+      id: tempMessageId,
+      sender_id: currentUser.id,
+      group_id: groupId,
+      content: content,
+      timestamp: timestamp,
+      status: 'sending',
+      is_read: true, // Group messages are considered read by the sender
+      // Add any other properties your message objects have
+    };
+
+    // Optimistically add to state
+    setMessages(prev => {
+      const existingMessages = prev[chatKey] || [];
+      return {
+        ...prev,
+        [chatKey]: [...existingMessages, newMessage]
+      };
+    });
+
     try {
-      const payload = {
-        group_id: groupId,
-        content: content.trim()
-      };
-
-      // Create a consistent timestamp for the optimistic message
-      const now = new Date();
-      const isoTimestamp = now.toISOString();
-
-      // Add optimistic update for immediate UI feedback
-      const tempId = `temp-${Date.now()}`;
-      const optimisticMessage = {
-        id: tempId,
-        content: content.trim(),
-        sender_id: currentUser.id,
-        group_id: groupId,
-        timestamp: isoTimestamp,
-        created_at: isoTimestamp,
-        delivered: true,
-        decrypted: true,
-        preserve_content: true,
-        pending: true
-      };
-
-      // Add the optimistic message to state with group- prefix
-      const chatKey = `group-${groupId}`;
-      setMessages(prev => {
-        const existingMessages = prev[chatKey] || [];
-
-        // Add new message to existing ones
-        const updatedMessages = [...existingMessages, optimisticMessage];
-
-        // Sort messages by timestamp in ascending order (oldest first)
-        updatedMessages.sort((a, b) => {
-          const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
-          const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
-          return timeA - timeB;
-        });
-
-        return {
-          ...prev,
-          [chatKey]: updatedMessages
+      // Attempt to send via MQTT if connected
+      if (mqttConnected) {
+        // Publish to the group topic
+        const groupTopic = MQTT_CONFIG.TOPICS.GROUP_MESSAGES(groupId);
+        
+        // Create the message payload
+        const payload = {
+          type: 'group_message',
+          messageId: tempMessageId,
+          senderId: currentUser.id,
+          groupId: groupId,
+          content: content,
+          timestamp: timestamp
         };
-      });
-
-      // Send message to server
-      const response = await api.post('/messages', payload);
-
-      // Update the message with the real ID and remove pending status
-      if (response && response.data && response.data.id) {
+        
+        // Send via MQTT
+        await mqttService.publishMessage(groupTopic, payload);
+        
+        // Update status to 'sent' in local state
         setMessages(prev => {
-          const chatKey = `group-${groupId}`;
-          const updatedMessages = (prev[chatKey] || []).map(msg =>
-            msg.id === tempId ? {
-              ...msg,
-              id: response.data.id,
-              timestamp: response.data.created_at || msg.timestamp,
-              created_at: response.data.created_at || msg.created_at,
-              pending: false
-            } : msg
-          );
-
-          // Ensure messages are sorted by timestamp
-          updatedMessages.sort((a, b) => {
-            const timeA = new Date(a.timestamp || a.created_at || 0).getTime();
-            const timeB = new Date(b.timestamp || b.created_at || 0).getTime();
-            return timeA - timeB;
-          });
-
+          const chatMessages = prev[chatKey] || [];
           return {
             ...prev,
-            [chatKey]: updatedMessages
+            [chatKey]: chatMessages.map(msg => 
+              msg.id === tempMessageId 
+                ? { ...msg, status: 'sent', timestamp: timestamp }
+                : msg
+            )
           };
         });
-
-        // Save message content to localStorage for content preservation
-        try {
-          const savedMessages = JSON.parse(localStorage.getItem('preservedMessages') || '{}');
-          savedMessages[response.data.id] = { id: response.data.id, content: content.trim() };
-          localStorage.setItem('preservedMessages', JSON.stringify(savedMessages));
-        } catch (e) {
-          console.error('Error saving message to localStorage', e);
+        
+        console.log('Group message sent via MQTT');
+        return true;
+      } else {
+        // Fall back to REST API
+        const response = await api.post(`/messages/group/${groupId}`, {
+          content: content
+        });
+        
+        // Update the message in state with the server response
+        if (response.data && response.data.id) {
+          setMessages(prev => {
+            const chatMessages = prev[chatKey] || [];
+            return {
+              ...prev,
+              [chatKey]: chatMessages.map(msg => 
+                msg.id === tempMessageId 
+                  ? { ...msg, id: response.data.id, status: 'sent', timestamp: response.data.timestamp || timestamp }
+                  : msg
+              )
+            };
+          });
         }
+        
+        console.log('Group message sent via REST API');
+        return true;
       }
-
-      return response?.data;
     } catch (error) {
       console.error('Error sending group message:', error);
-
-      // Update the optimistic message to show error state
-      const chatKey = `group-${groupId}`;
+      
+      // Update status to 'failed' in local state
       setMessages(prev => {
-        const updatedMessages = (prev[chatKey] || []).map(msg =>
-          msg.pending ? {
-            ...msg,
-            error: true,
-            errorMessage: error?.response?.data?.detail || 'Failed to send'
-          } : msg
-        );
-
+        const chatMessages = prev[chatKey] || [];
         return {
           ...prev,
-          [chatKey]: updatedMessages
+          [chatKey]: chatMessages.map(msg => 
+            msg.id === tempMessageId 
+              ? { ...msg, status: 'failed' }
+              : msg
+          )
         };
       });
-
-      throw error;
+      
+      return false;
     }
   };
 
@@ -684,15 +681,15 @@ export function MessagesProvider({ children }) {
     error,
     activeChat,
     setActiveChat,
+    loadMessages,
+    refreshMessages,
     sendMessage,
     sendGroupMessage,
-    loadMessages,
     loadGroupMessages,
-    refreshMessages,
     refreshGroupMessages,
     markAsRead,
-    getPreservedContent,
-    isConnected
+    mqttConnected,
+    getPreservedContent
   };
 
   return (
