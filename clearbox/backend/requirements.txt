@@ -23,4 +23,5 @@ redis==5.0.1  # For caching and session storage (optional)
 
 # Monitoring and logging
 sentry-sdk[fastapi]==1.33.1
-prometheus-fastapi-instrumentator==6.1.0 
+prometheus-fastapi-instrumentator==6.1.0
+email-validator==2.1.0 
