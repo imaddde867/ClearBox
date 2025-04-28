@@ -1,1 +1,5 @@
-/* /index.html 200 
+# Proxy API requests to the Render backend
+/api/*  https://clearbox-api.onrender.com/api/:splat  200
+
+# Serve the frontend for all other routes
+/*  /index.html  200
