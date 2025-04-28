@@ -1,6 +1,6 @@
 import os
 from typing import List
-from app.config import Settings, get_cors_origins
+from app.config import Settings
 
 class ProductionSettings(Settings):
     database_url: str = os.environ.get("DATABASE_URL")
@@ -11,7 +11,7 @@ class ProductionSettings(Settings):
     mqtt_use_ssl: bool = os.environ.get("MQTT_USE_SSL", "true").lower() == "true"
     secret_key: str = os.environ.get("SECRET_KEY")
     encryption_key: str = os.environ.get("ENCRYPTION_KEY")
-    cors_origins: List[str] = get_cors_origins(os.environ.get("CORS_ORIGINS", "https://clearbox.live"))
+    cors_origins_str: str = os.environ.get("CORS_ORIGINS", "https://clearbox.live")
     
     # For compatibility with older Pydantic versions
     def dict(self):
