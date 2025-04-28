@@ -24,7 +24,7 @@ class ProductionSettings(Settings):
             # Fall back to vars() as a last resort
             return {k: v for k, v in vars(self).items() if not k.startswith('_')}
     
-    # For newer Pydantic versions
+    # For newer Pydantic versions - override the parent class's model_config
     model_config = {
         "env_file": None,  # Don't load from .env in production
     }
