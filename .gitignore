@@ -75,3 +75,5 @@ ssh_imad.pub
 deploy.sh
 direct_deploy.sh
 fresh_deploy.sh
+# Local Netlify folder
+.netlify
