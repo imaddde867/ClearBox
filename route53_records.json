@@ -48,6 +48,16 @@
                     "Value": "51.21.169.163"
                 }
             ]
+        },
+        {
+            "Name": "api.clearbox.live.",
+            "Type": "A",
+            "TTL": 300,
+            "ResourceRecords": [
+                {
+                    "Value": "51.21.169.163"
+                }
+            ]
         }
     ]
 }
