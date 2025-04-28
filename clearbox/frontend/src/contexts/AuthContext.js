@@ -128,7 +128,7 @@ export function AuthProvider({ children }) {
       };
 
       console.log('Signing up new user...');
-      const response = await api.post('/signup', signupData);
+      const response = await api.post('/register', signupData);
       console.log('Signup successful, saving token');
 
       if (response.data.access_token) {
