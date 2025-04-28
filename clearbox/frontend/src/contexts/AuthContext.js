@@ -77,7 +77,17 @@ export function AuthProvider({ children }) {
       setAuthStatus('loading');
       setLoading(true);
       console.log('Fetching user profile...');
-      const response = await api.get(API_CONFIG.ENDPOINTS.PROFILE);
+      // Try different profile endpoints if needed
+      let response;
+      try {
+        // Try with the configured endpoint first
+        response = await api.get(API_CONFIG.ENDPOINTS.PROFILE);
+      } catch (error) {
+        console.log('Primary profile endpoint failed, trying alternative...');
+        // Try a direct path as fallback
+        response = await api.get('/profile');
+      }
+      
       console.log('Profile loaded successfully');
       setCurrentUser(response.data);
       setAuthStatus('success');
@@ -130,37 +140,51 @@ export function AuthProvider({ children }) {
       };
 
       console.log('Signing up new user...');
-      // Try register endpoint first, fall back to signup if needed
-      try {
-        const response = await api.post(API_CONFIG.ENDPOINTS.REGISTER, signupData);
-        console.log('Signup successful via /register, saving token');
-
-        if (response.data.access_token) {
-          localStorage.setItem('token', response.data.access_token);
-          await loadUserProfile();
-          setAuthStatus('success');
-          return response.data;
-        }
-      } catch (registerError) {
-        console.log('Register endpoint failed, trying signup endpoint');
-        const response = await api.post(API_CONFIG.ENDPOINTS.SIGNUP, signupData);
-        console.log('Signup successful via /signup, saving token');
-
-        if (response.data.access_token) {
-          localStorage.setItem('token', response.data.access_token);
-          await loadUserProfile();
-          setAuthStatus('success');
-          return response.data;
+      
+      // Try all possible endpoint combinations
+      let response;
+      let errors = [];
+      
+      // Array of possible endpoint paths to try
+      const endpointPaths = [
+        API_CONFIG.ENDPOINTS.REGISTER,
+        API_CONFIG.ENDPOINTS.SIGNUP,
+        '/register',
+        '/signup',
+        '/auth/register',
+        '/auth/signup'
+      ];
+      
+      // Try each endpoint until one works
+      for (const path of endpointPaths) {
+        try {
+          console.log(`Trying registration endpoint: ${path}`);
+          response = await api.post(path, signupData);
+          console.log(`Signup successful via ${path}`);
+          
+          if (response.data.access_token) {
+            localStorage.setItem('token', response.data.access_token);
+            await loadUserProfile();
+            setAuthStatus('success');
+            return response.data;
+          }
+          break; // Exit the loop if successful
+        } catch (error) {
+          const errorDetail = error.response?.data?.detail;
+          console.log(`Endpoint ${path} failed:`, errorDetail || error.message);
+          errors.push({ path, error: errorDetail || error.message });
+          // Continue to next endpoint
         }
       }
 
-      throw new Error('Authentication failed: No token received');
+      // If we got here, all endpoints failed
+      throw new Error(`All signup endpoints failed: ${JSON.stringify(errors)}`);
     } catch (error) {
       console.error('Signup error:', error);
       // Improved error handling to show the specific error message from the backend
       const errorDetail = error.response?.data?.detail;
       console.error('Error detail:', errorDetail);
-      setAuthError(errorDetail || 'Failed to create account. Check if the username or email is already registered.');
+      setAuthError(errorDetail || 'Failed to create account. Check if the username or email is already registered or if the backend is temporarily unavailable.');
       setAuthStatus('error');
       throw error;
     } finally {
@@ -174,35 +198,60 @@ export function AuthProvider({ children }) {
       setLoading(true);
 
       console.log('Logging in user...');
-      // Use the /login/email endpoint instead to send JSON
-      const response = await api.post('/login/email', {
+      
+      // Try different login endpoints
+      let response;
+      let errors = [];
+      
+      // Array of possible login endpoint paths to try
+      const endpointPaths = [
+        '/login/email',
+        API_CONFIG.ENDPOINTS.LOGIN,
+        '/login',
+        '/auth/login'
+      ];
+      
+      const loginData = {
         email: usernameOrEmail,
         password: password
-      });
+      };
+      
+      // Try each endpoint until one works
+      for (const path of endpointPaths) {
+        try {
+          console.log(`Trying login endpoint: ${path}`);
+          response = await api.post(path, loginData);
+          console.log(`Login successful via ${path}`);
+          
+          if (response.data.access_token) {
+            // Store token in localStorage with consistent key
+            localStorage.setItem('token', response.data.access_token);
 
-      console.log('Login successful, saving token');
-      if (response.data.access_token) {
-        // Store token in localStorage with consistent key
-        localStorage.setItem('token', response.data.access_token);
+            // Double-check that token was saved correctly
+            const savedToken = localStorage.getItem('token');
+            if (!savedToken) {
+              console.error('Token was not properly saved to localStorage');
+              throw new Error('Authentication failed: Could not save token');
+            }
 
-        // Double-check that token was saved correctly
-        const savedToken = localStorage.getItem('token');
-        if (!savedToken) {
-          console.error('Token was not properly saved to localStorage');
-          throw new Error('Authentication failed: Could not save token');
+            await loadUserProfile();
+            setAuthStatus('success');
+            return response.data;
+          }
+          break; // Exit the loop if successful
+        } catch (error) {
+          const errorDetail = error.response?.data?.detail;
+          console.log(`Endpoint ${path} failed:`, errorDetail || error.message);
+          errors.push({ path, error: errorDetail || error.message });
+          // Continue to next endpoint
         }
-
-        await loadUserProfile();
-      } else {
-        console.error('No token received during login');
-        throw new Error('Authentication failed: No token received');
       }
 
-      setAuthStatus('success');
-      return response.data;
+      // If we got here without returning, all endpoints failed
+      throw new Error(`All login endpoints failed: ${JSON.stringify(errors)}`);
     } catch (error) {
       console.error('Login error:', error);
-      setAuthError(error.response?.data?.detail || 'Failed to login');
+      setAuthError(error.response?.data?.detail || 'Failed to login. Check your credentials or try again later.');
       setAuthStatus('error');
       throw error;
     } finally {

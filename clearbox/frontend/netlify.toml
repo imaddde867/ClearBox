@@ -9,17 +9,21 @@
   to = "/index.html"
   status = 200
 
-# API redirect to handle API requests directly
+# API redirect to handle API requests - explicitly target the Render backend
 [[redirects]]
   from = "/api/*"
-  to = "https://api.clearbox.live/api/:splat"
+  to = "https://clearbox-api.onrender.com/api/:splat"
   status = 200
   force = true
+  # Add debugging headers to track redirects
+  [redirects.headers]
+    X-Redirect-From = "netlify-proxy"
+    X-Proxy-Debug = "true"
 
 # Environment variables will be set in Netlify UI
 [build.environment]
   NODE_VERSION = "16"
-  REACT_APP_API_URL = "https://api.clearbox.live"
+  REACT_APP_API_URL = ""
   REACT_APP_MQTT_URL = "wss://beb6c3d91a0e4befbb836d5269d627ea.s1.eu.hivemq.cloud:8884/mqtt"
 
 # Force HTTPS
