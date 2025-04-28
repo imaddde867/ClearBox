@@ -1,6 +1,6 @@
 [build]
   base = "."
-  publish = "build/"
+  publish = "./build/"
   command = "npm run build"
 
 # Redirects for SPA (Single Page Application)
