@@ -28,18 +28,30 @@ ClearBox is a full-stack secure messaging platform designed with modern security
 
 ## 📊 Data Architecture & Documentation
 
-As a Big Data Engineering project, ClearBox maintains comprehensive documentation of its data architecture:
+As a Big Data Engineering project, ClearBox maintains comprehensive documentation of its data architecture, crucial for understanding its robust design and data handling:
 
-- **Database Schema** - Detailed in `docs/database_schema.md` with a visual representation in `docs/database.png`, this document outlines our relational data model with tables for Users, Conversations, Messages, Contacts, and Notifications that support the messaging and user management functionality. The schema includes entity relationships, security considerations, and field descriptions.
+### Database Schema
+Detailed in `docs/database_schema.md` with a visual representation in `docs/database.png`, our relational data model is built around six core tables:
+- **Users**: Manages user identification, authentication (securely hashed passwords), profile customization (avatar, bio), and status tracking.
+- **Conversations**: Distinguishes between 1-on-1 and group chats, tracking ownership and timestamps.
+- **Conversation Members**: Links users to conversations, defining roles and nicknames within specific chats.
+- **Messages**: Stores message content, sender, conversation, read status, and encryption flag.
+- **User Contacts**: Manages contact relationships between users, including nicknames and status.
+- **Notifications**: Handles various notification types, recipients, content, and read status, linking to relevant entities.
 
-- **System Architecture** - Documented in `docs/system_architecture_diagram.md` with a visual representation in `docs/diagram.png`, this provides a complete overview of the system's layered architecture:
-  - Client Layer (web browsers)
-  - Presentation Layer (React frontend)
-  - Application Layer (FastAPI backend)
-  - Messaging Layer (MQTT broker for real-time communication)
-  - Data Layer (Database storage)
-  
-  The documentation includes detailed data flow descriptions showing how user requests are processed through the system layers, authentication mechanisms, and real-time messaging handling.
+**Security Considerations**: Passwords are securely hashed, message content can be encrypted, database connections use TLS/SSL, and parameterized statements prevent SQL injection.
+
+### System Architecture
+Documented in `docs/system_architecture_diagram.md` with a visual representation in `docs/diagram.png`, the system employs a layered architecture to ensure scalability, security, and real-time communication:
+- **Client Layer**: Web browsers and mobile devices accessing the application.
+- **Presentation Layer**: Nginx server for HTTPS, static file serving, and API request routing.
+- **Application Layer**:
+  - **Frontend**: React application handling UI, authentication, messaging, and notifications.
+  - **Backend**: FastAPI Python application managing API routes for authentication, messages, and user management.
+- **Messaging Layer**: Mosquitto MQTT broker for real-time message delivery, presence updates, and typing indicators.
+- **Data Layer**: PostgreSQL database for persistent storage of user data, messages, conversations, and metadata.
+
+**Data Flow**: User requests are routed via Nginx. Authentication generates JWT tokens for secure API access. Messages are encrypted, stored in the database, and delivered in real-time via MQTT to online recipients, or queued for offline delivery. Users fetch new messages and receive real-time updates upon coming online.
 
 These documents are essential for understanding the data engineering aspects of ClearBox, including data storage, retrieval patterns, and system interactions.
 
