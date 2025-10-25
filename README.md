@@ -30,38 +30,38 @@ ClearBox is a full-stack secure messaging platform designed with modern security
 
 ## ✨ Core Messaging Capabilities
 
-- **💬 User-to-User Messaging** - Seamless communication between two users with message encryption
-- **👨‍👩‍👧‍👦 Group Chat** - Create and manage conversations with multiple participants simultaneously
-- **📴 Asynchronous Messaging** - Messages are stored and delivered when recipients come online
-- **📬 Read Receipts** - Track message delivery status
-- **👀 Online Status** - See when your contacts are active with real-time presence updates
+- ** User-to-User Messaging** - Seamless communication between two users with message encryption
+- ** Group Chat** - Create and manage conversations with multiple participants simultaneously
+- ** Asynchronous Messaging** - Messages are stored and delivered when recipients come online
+- ** Read Receipts** - Track message delivery status
+- ** Online Status** - See when your contacts are active with real-time presence updates
 
 ## 🛡️ Security & Privacy
 
-- **🔒 Encryption** - Messages encrypted using Fernet symmetric encryption (cryptography library)
-- **🔐 Secure Authentication** - JWT-based authentication with bcrypt password hashing
-- **🕵️ Data Minimization** - Only essential information collected and stored
-- **🗑️ Account Deletion** - User accounts can be deleted (GDPR compliance)
-- **⏲️ Session Management** - Token-based authentication with proper expiration
-- **🔐 HTTPS** - All communications encrypted in transit
-- **🛡️ Password Protection** - Secure password hashing using bcrypt algorithm
+- ** Encryption** - Messages encrypted using Fernet symmetric encryption (cryptography library)
+- ** Secure Authentication** - JWT-based authentication with bcrypt password hashing
+- ** Data Minimization** - Only essential information collected and stored
+- ** Account Deletion** - User accounts can be deleted (GDPR compliance)
+- ** Session Management** - Token-based authentication with proper expiration
+- ** HTTPS** - All communications encrypted in transit
+- ** Password Protection** - Secure password hashing using bcrypt algorithm
 
 ## 📋 GDPR Compliance
 
 ClearBox implements data protection measures in line with GDPR requirements:
 
-- **🔍 Right to Access** - Users can access their profile data
-- **🗑️ Right to be Forgotten** - Account deletion feature removes user data
-- **⚖️ Minimal Processing** - Only essential data is collected and processed
-- **🔒 Data Security** - Encryption for messages in transit
+- ** Right to Access** - Users can access their profile data
+- ** Right to be Forgotten** - Account deletion feature removes user data
+- ** Minimal Processing** - Only essential data is collected and processed
+- ** Data Security** - Encryption for messages in transit
 
 ## 🎯 Key Features
 
-- **🔔 Real-time Notifications** - Instant alerts for new messages and contact requests
-- **😊 Emoji Support** - Express yourself with emoji picker in chat
-- **📱 Responsive Design** - Works on both desktop and mobile devices
-- **🔍 User Search** - Find and connect with other users
-- **⌨️ Typing Indicators** - See when your contacts are typing
+- ** Real-time Notifications** - Instant alerts for new messages and contact requests
+- ** Emoji Support** - Express yourself with emoji picker in chat
+- ** Responsive Design** - Works on both desktop and mobile devices
+- ** User Search** - Find and connect with other users
+- ** Typing Indicators** - See when your contacts are typing
 
 ## 🛠️ Tech Stack
 
@@ -300,7 +300,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/clearbox.git
+   git clone https://github.com/imaddde867/clearbox.git
    cd clearbox
    ```
 
