@@ -23,7 +23,7 @@ This document outlines the steps to deploy ClearBox to a production environment 
 3. In the SQL Editor, create your database tables using the SQL provided in the repository
 4. Get your connection string from Settings → Database → Connection string (select "URI")
 5. Save this connection string for the backend deployment
-   - Database URL: `postgresql://postgres:120705imad@db.nnitebsysgmcdhelglqx.supabase.co:5432/postgres`
+   - Database URL: `postgresql://postgres:<your-password>@db.nnitebsysgmcdhelglqx.supabase.co:5432/postgres`
 
 ## Step 2: MQTT Broker Setup with HiveMQ Cloud
 
@@ -35,7 +35,7 @@ This document outlines the steps to deploy ClearBox to a production environment 
    - Port: `8883` for secure MQTT
    - WebSocket Port: `8884` for secure WebSockets
    - Username: `imadeddine200507`
-   - Password: `120705Imad`
+   - Password: `<your-password>`
 
 ## Step 3: Backend Deployment to Render
 
@@ -45,12 +45,12 @@ This document outlines the steps to deploy ClearBox to a production environment 
 2. Connect to Render and create a new Blueprint instance
 3. Select your GitHub repository
 4. Configure the secret environment variables in the Render dashboard:
-   - `DATABASE_URL`: `postgresql://postgres:120705imad@db.nnitebsysgmcdhelglqx.supabase.co:5432/postgres`
+   - `DATABASE_URL`: `postgresql://postgres:<your-password>@db.nnitebsysgmcdhelglqx.supabase.co:5432/postgres`
    - `SECRET_KEY`: (generate a strong random string)
    - `MQTT_BROKER`: `beb6c3d91a0e4befbb836d5269d627ea.s1.eu.hivemq.cloud`
    - `MQTT_PORT`: `8883`
    - `MQTT_USERNAME`: `imadeddine200507`
-   - `MQTT_PASSWORD`: `120705Imad`
+   - `MQTT_PASSWORD`: `<your-password>`
    - `MQTT_USE_SSL`: `true`
    - `ENCRYPTION_KEY`: (generate a strong random string)
    - `CORS_ORIGINS`: `https://clearbox.live`
@@ -80,7 +80,7 @@ This document outlines the steps to deploy ClearBox to a production environment 
    - `REACT_APP_API_URL=https://clearbox-api.onrender.com` (your Render backend URL)
    - `REACT_APP_MQTT_URL=wss://beb6c3d91a0e4befbb836d5269d627ea.s1.eu.hivemq.cloud:8884/mqtt`
    - `REACT_APP_MQTT_USERNAME=imadeddine200507`
-   - `REACT_APP_MQTT_PASSWORD=120705Imad`
+   - `REACT_APP_MQTT_PASSWORD=<your-password>`
 
 ### Option 2: Manual Deployment
 
