@@ -47,8 +47,8 @@ const MQTT_CONFIG = {
     clean: true,
     // For production HiveMQ connection
     ...(process.env.NODE_ENV === 'production' && {
-      username: process.env.REACT_APP_MQTT_USERNAME || 'imadeddine200507',
-      password: process.env.REACT_APP_MQTT_PASSWORD || '120705Imad',
+      username: process.env.REACT_APP_MQTT_USERNAME,
+      password: process.env.REACT_APP_MQTT_PASSWORD,
       ssl: true,
       protocolVersion: 5
     })
