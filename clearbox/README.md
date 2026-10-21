@@ -182,6 +182,8 @@ MQTT_PORT=1883
 # Encryption Configuration
 # Required: the app refuses to start if this is empty.
 ENCRYPTION_KEY=
+# Optional: previous key, decryption only (key rotation).
+# LEGACY_ENCRYPTION_KEY=
 
 # Server Configuration
 PORT=8000

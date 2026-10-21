@@ -58,6 +58,11 @@ This document outlines the steps to deploy ClearBox to a production environment 
 > **Encryption key:** keep `ENCRYPTION_KEY` stable across deployments. Messages are encrypted
 > with it, so changing it makes existing messages unreadable. They are returned to clients as a
 > placeholder, never as ciphertext or plaintext.
+>
+> To rotate the key (including away from the former hardcoded `supersecretkey` default):
+> set `LEGACY_ENCRYPTION_KEY` to the old key (decryption only), deploy, then run
+> `cd backend && python migrations/reencrypt_messages.py --apply`. Remove
+> `LEGACY_ENCRYPTION_KEY` and redeploy once the migration reports zero unreadable messages.
 
 ### Option 2: Manual Deployment
 

@@ -1,9 +1,11 @@
+import contextlib
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from unittest.mock import patch
 
 from app.encryption import encrypt_message, decrypt_message, get_encryption_key
@@ -11,11 +13,15 @@ from app.encryption import encrypt_message, decrypt_message, get_encryption_key
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def _run_in_new_process(code, encryption_key):
+def _run_in_new_process(code, encryption_key=None, extra_env=None):
     """Import the app in a fresh interpreter, with ENCRYPTION_KEY under test."""
     env = os.environ.copy()
     env.pop("ENCRYPTION_KEY", None)
-    env["ENCRYPTION_KEY"] = encryption_key
+    env.pop("LEGACY_ENCRYPTION_KEY", None)
+    if encryption_key is not None:
+        env["ENCRYPTION_KEY"] = encryption_key
+    if extra_env:
+        env.update(extra_env)
     env["PYTHONPATH"] = BACKEND_DIR
     return subprocess.run(
         [sys.executable, "-c", code],
@@ -24,6 +30,21 @@ def _run_in_new_process(code, encryption_key):
         env=env,
         cwd=BACKEND_DIR,
     )
+
+
+@contextlib.contextmanager
+def _env_file_with(contents):
+    """Temporarily replace backend/.env, restoring any existing file afterwards."""
+    env_path = Path(BACKEND_DIR) / ".env"
+    backup = env_path.read_bytes() if env_path.exists() else None
+    env_path.write_text(contents)
+    try:
+        yield
+    finally:
+        if backup is None:
+            env_path.unlink(missing_ok=True)
+        else:
+            env_path.write_bytes(backup)
 
 
 class TestEncryptionFailClosed:
@@ -110,6 +131,72 @@ class TestEncryptionKeyConfiguration:
         result = _run_in_new_process(
             f"import app.encryption as e; e.decrypt_message({ciphertext!r})",
             "a-different-key-0123456789abcdef",
+        )
+
+        assert result.returncode != 0
+        assert "InvalidToken" in result.stderr
+
+    def test_env_file_with_key_initializes_settings(self):
+        with _env_file_with("ENCRYPTION_KEY=env-file-key-0123456789abcdef\n"):
+            result = _run_in_new_process(
+                "import app.config as c; print(c.settings.encryption_key)"
+            )
+
+        assert result.returncode == 0, result.stderr
+        assert result.stdout.strip().splitlines()[-1] == "env-file-key-0123456789abcdef"
+
+    def test_app_imports_with_documented_env_file(self):
+        with _env_file_with(
+            "ENCRYPTION_KEY=startup-test-key-0123456789\n"
+            "DATABASE_URL=sqlite://\n"
+            "MQTT_BROKER=127.0.0.1\n"
+            "MQTT_PORT=1\n"
+            "MQTT_USE_SSL=false\n"
+        ):
+            result = _run_in_new_process(
+                "import app.main; print('APP IMPORT OK')"
+            )
+
+        assert result.returncode == 0, result.stderr
+        assert "APP IMPORT OK" in result.stdout
+
+    def test_legacy_key_decrypts_old_ciphertext(self):
+        # Ciphertext produced by the former hardcoded 14-character default.
+        legacy = Fernet(get_encryption_key(b"supersecretkey"))
+        ciphertext = legacy.encrypt(b"old message").decode()
+
+        result = _run_in_new_process(
+            f"import app.encryption as e; print(e.decrypt_message({ciphertext!r}))",
+            "new-strong-key-0123456789abcdef",
+            {"LEGACY_ENCRYPTION_KEY": "supersecretkey"},
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert result.stdout.strip() == "old message"
+
+    def test_new_messages_use_current_key_not_legacy(self):
+        result = _run_in_new_process(
+            "import app.encryption as e; print(e.encrypt_message('new message'))",
+            "new-strong-key-0123456789abcdef",
+            {"LEGACY_ENCRYPTION_KEY": "supersecretkey"},
+        )
+        assert result.returncode == 0, result.stderr
+        ciphertext = result.stdout.strip()
+
+        current = Fernet(get_encryption_key(b"new-strong-key-0123456789abcdef"))
+        assert current.decrypt(ciphertext.encode()) == b"new message"
+
+        legacy = Fernet(get_encryption_key(b"supersecretkey"))
+        with pytest.raises(InvalidToken):
+            legacy.decrypt(ciphertext.encode())
+
+    def test_old_ciphertext_fails_without_legacy_key(self):
+        legacy = Fernet(get_encryption_key(b"supersecretkey"))
+        ciphertext = legacy.encrypt(b"old message").decode()
+
+        result = _run_in_new_process(
+            f"import app.encryption as e; e.decrypt_message({ciphertext!r})",
+            "new-strong-key-0123456789abcdef",
         )
 
         assert result.returncode != 0

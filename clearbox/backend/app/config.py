@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 import os
-from typing import List
+from typing import List, Optional
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -23,7 +23,10 @@ class Settings(BaseSettings):
     mqtt_use_ssl: bool = os.getenv("MQTT_USE_SSL", "false").lower() == "true"
     
     # Encryption is read directly from the environment by app.encryption,
-    # which refuses to start without an explicitly configured key.
+    # which refuses to start without an explicitly configured key. This field
+    # only keeps ENCRYPTION_KEY in .env a recognised setting rather than an
+    # "extra inputs are not permitted" error.
+    encryption_key: Optional[str] = None
 
     # CORS - simplified to avoid parsing issues
     cors_origins_str: str = os.getenv("CORS_ORIGINS", "*")
