@@ -1,13 +1,13 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
-from typing import Dict, List, Set
+from typing import Dict, Set
 import json
 import asyncio
 from ..security import get_current_user_ws
-from ..models import User, Message, Notification
+from ..models import Message
 from ..database import get_db
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from ..encryption import decrypt_message
+from ..encryption import decrypt_message, UNDECRYPTABLE_PLACEHOLDER
 
 router = APIRouter()
 
@@ -127,18 +127,21 @@ async def send_undelivered_messages(user_id: int, db: Session):
     ).order_by(desc(Message.created_at)).all()
 
     for msg in undelivered_messages:
-        # Decrypt message content
-        try:
-            decrypted_content = decrypt_message(msg.content)
-        except:
-            decrypted_content = "[Encrypted message]"
+        if msg.encrypted:
+            try:
+                content = decrypt_message(msg.content)
+            except Exception:
+                content = UNDECRYPTABLE_PLACEHOLDER
+        else:
+            # Legacy rows stored before encryption was enforced
+            content = msg.content
 
         # Prepare message for sending
         message_data = {
             "type": "message",
             "messageId": msg.id,
             "senderId": msg.sender_id,
-            "content": decrypted_content,
+            "content": content,
             "timestamp": msg.created_at.isoformat()
         }
 

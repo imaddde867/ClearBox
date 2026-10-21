@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 import os
-from typing import List
+from typing import List, Optional
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -22,9 +22,12 @@ class Settings(BaseSettings):
     mqtt_password: str = os.getenv("MQTT_PASSWORD", "")
     mqtt_use_ssl: bool = os.getenv("MQTT_USE_SSL", "false").lower() == "true"
     
-    # Encryption
-    encryption_key: str = os.getenv("ENCRYPTION_KEY", "dev_encryption_key_change_in_production")
-    
+    # Encryption is read directly from the environment by app.encryption,
+    # which refuses to start without an explicitly configured key. This field
+    # only keeps ENCRYPTION_KEY in .env a recognised setting rather than an
+    # "extra inputs are not permitted" error.
+    encryption_key: Optional[str] = None
+
     # CORS - simplified to avoid parsing issues
     cors_origins_str: str = os.getenv("CORS_ORIGINS", "*")
     
@@ -34,6 +37,8 @@ class Settings(BaseSettings):
     # For compatibility with pydantic-settings v2
     model_config = {
         "env_file": ".env",
+        # Other modules read env vars absent from Settings (PORT, LEGACY_ENCRYPTION_KEY).
+        "extra": "ignore",
     }
     
     @property

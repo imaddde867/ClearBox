@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List
 from sqlalchemy import and_, or_, desc
 
 from ..database import get_db
 from ..models import User, Message, Contact, Group, GroupMember, Notification
 from ..schemas import MessageCreate, MessageResponse
 from ..security import get_current_active_user
-from ..encryption import encrypt_message, decrypt_message
-from ..mqtt_client import publish_message, get_mqtt_client
+from ..encryption import encrypt_message, decrypt_message, UNDECRYPTABLE_PLACEHOLDER
+from ..mqtt_client import publish_message
 from .websockets import manager
 
 router = APIRouter(tags=["Messages"])
@@ -52,7 +52,7 @@ def send_message(
         # Encrypt the message content
         try:
             encrypted_content = encrypt_message(message.content)
-        except Exception as e:
+        except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Message encryption failed"
@@ -105,9 +105,16 @@ def send_message(
             db.commit()
 
         # Return the message with decrypted content for the sender
-        response = db_message
-        response.content = message.content  # Return original content to sender
-        return response
+        return MessageResponse(
+            id=db_message.id,
+            sender_id=db_message.sender_id,
+            receiver_id=db_message.receiver_id,
+            group_id=db_message.group_id,
+            content=message.content,  # Return original content to sender
+            encrypted=db_message.encrypted,
+            delivered=db_message.delivered,
+            created_at=db_message.created_at
+        )
 
     # Handle group message
     else:
@@ -134,7 +141,7 @@ def send_message(
         # Encrypt the message content
         try:
             encrypted_content = encrypt_message(message.content)
-        except Exception as e:
+        except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Message encryption failed"
@@ -195,9 +202,16 @@ def send_message(
         db.commit()
 
         # Return the message with decrypted content for the sender
-        response = db_message
-        response.content = message.content  # Return original content to sender
-        return response
+        return MessageResponse(
+            id=db_message.id,
+            sender_id=db_message.sender_id,
+            receiver_id=db_message.receiver_id,
+            group_id=db_message.group_id,
+            content=message.content,  # Return original content to sender
+            encrypted=db_message.encrypted,
+            delivered=db_message.delivered,
+            created_at=db_message.created_at
+        )
 
 @router.get("/messages/user/{user_id}", response_model=List[MessageResponse])
 def get_user_messages(
@@ -244,17 +258,39 @@ def get_user_messages(
         Message.group_id == None
     ).order_by(desc(Message.created_at)).limit(limit).all()
 
-    # Decrypt message content for display
+    # Mark undelivered messages as delivered and build response list
+    response_messages = []
     for msg in messages:
-        if msg.encrypted:
-            msg.content = decrypt_message(msg.content)
-
         # Mark as delivered if received and the current user is the receiver
         if msg.sender_id == user_id and msg.receiver_id == current_user.id and not msg.delivered:
             msg.delivered = True
-            db.commit()
 
-    return messages
+        # Decrypt content for response without modifying ORM entity
+        if msg.encrypted:
+            try:
+                content = decrypt_message(msg.content)
+            except Exception:
+                # Historical message cannot be decrypted (wrong key, corruption, legacy plaintext)
+                # Return placeholder without exposing raw ciphertext
+                content = UNDECRYPTABLE_PLACEHOLDER
+        else:
+            content = msg.content
+
+        response_messages.append(MessageResponse(
+            id=msg.id,
+            sender_id=msg.sender_id,
+            receiver_id=msg.receiver_id,
+            group_id=msg.group_id,
+            content=content,
+            encrypted=msg.encrypted,
+            delivered=msg.delivered,
+            created_at=msg.created_at
+        ))
+
+    # Commit delivery status updates after building responses
+    db.commit()
+
+    return response_messages
 
 @router.get("/messages/group/{group_id}", response_model=List[MessageResponse])
 def get_group_messages(
@@ -291,12 +327,31 @@ def get_group_messages(
         Message.group_id == group_id
     ).order_by(desc(Message.created_at)).limit(limit).all()
 
-    # Decrypt message content for display
+    # Decrypt content for response without modifying ORM entities
+    response_messages = []
     for msg in messages:
         if msg.encrypted:
-            msg.content = decrypt_message(msg.content)
+            try:
+                content = decrypt_message(msg.content)
+            except Exception:
+                # Historical message cannot be decrypted (wrong key, corruption, legacy plaintext)
+                # Return placeholder without exposing raw ciphertext
+                content = UNDECRYPTABLE_PLACEHOLDER
+        else:
+            content = msg.content
 
-    return messages
+        response_messages.append(MessageResponse(
+            id=msg.id,
+            sender_id=msg.sender_id,
+            receiver_id=msg.receiver_id,
+            group_id=msg.group_id,
+            content=content,
+            encrypted=msg.encrypted,
+            delivered=msg.delivered,
+            created_at=msg.created_at
+        ))
+
+    return response_messages
 
 @router.put("/messages/{message_id}/delivered")
 def mark_message_delivered(
