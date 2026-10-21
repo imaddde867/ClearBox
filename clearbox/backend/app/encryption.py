@@ -29,55 +29,25 @@ def get_encryption_key():
     return key
 
 # Initialize Fernet with our key
-try:
-    fernet = Fernet(get_encryption_key())
-except Exception as e:
-    logger.error(f"Failed to initialize encryption: {e}")
-    # For demo purposes, create a dummy encryption that just passes through
-    class DummyFernet:
-        def encrypt(self, data):
-            if isinstance(data, str):
-                data = data.encode()
-            return data
-
-        def decrypt(self, data):
-            if isinstance(data, bytes):
-                try:
-                    return data.decode()
-                except:
-                    return str(data)
-            return str(data)
-
-    fernet = DummyFernet()
-    logger.warning("Using dummy encryption for demo purposes")
+fernet = Fernet(get_encryption_key())
 
 def encrypt_message(message):
     """
     Encrypt a message
     """
-    try:
-        if isinstance(message, str):
-            message = message.encode()
-        encrypted = fernet.encrypt(message)
-        return encrypted.decode() if isinstance(encrypted, bytes) else encrypted
-    except Exception as e:
-        logger.error(f"Encryption error: {e}")
-        return message
+    if isinstance(message, str):
+        message = message.encode()
+    encrypted = fernet.encrypt(message)
+    return encrypted.decode() if isinstance(encrypted, bytes) else encrypted
 
 def decrypt_message(encrypted_message):
     """
     Decrypt a message
     """
-    try:
-        if isinstance(encrypted_message, str):
-            encrypted_message = encrypted_message.encode()
-        decrypted = fernet.decrypt(encrypted_message)
-        return decrypted.decode() if isinstance(decrypted, bytes) else decrypted
-    except Exception as e:
-        # Don't log every single error with empty message to avoid console spam
-        if str(e):
-            logger.error(f"Decryption error: {e}")
-        return "[Encrypted message]"
+    if isinstance(encrypted_message, str):
+        encrypted_message = encrypted_message.encode()
+    decrypted = fernet.decrypt(encrypted_message)
+    return decrypted.decode() if isinstance(decrypted, bytes) else decrypted
 
 # Generate a Fernet key to be used for message encryption/decryption
 def generate_key():

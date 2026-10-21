@@ -50,7 +50,13 @@ def send_message(
             )
 
         # Encrypt the message content
-        encrypted_content = encrypt_message(message.content)
+        try:
+            encrypted_content = encrypt_message(message.content)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Message encryption failed"
+            )
 
         # Check if recipient is online
         recipient_online = manager.is_user_online(message.receiver_id)
@@ -126,7 +132,13 @@ def send_message(
             )
 
         # Encrypt the message content
-        encrypted_content = encrypt_message(message.content)
+        try:
+            encrypted_content = encrypt_message(message.content)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Message encryption failed"
+            )
 
         # Create the message in the database
         db_message = Message(
@@ -235,11 +247,7 @@ def get_user_messages(
     # Decrypt message content for display
     for msg in messages:
         if msg.encrypted:
-            try:
-                msg.content = decrypt_message(msg.content)
-            except Exception:
-                # If decryption fails, indicate that
-                msg.content = "[Encrypted message]"
+            msg.content = decrypt_message(msg.content)
 
         # Mark as delivered if received and the current user is the receiver
         if msg.sender_id == user_id and msg.receiver_id == current_user.id and not msg.delivered:
@@ -286,11 +294,7 @@ def get_group_messages(
     # Decrypt message content for display
     for msg in messages:
         if msg.encrypted:
-            try:
-                msg.content = decrypt_message(msg.content)
-            except Exception:
-                # If decryption fails, indicate that
-                msg.content = "[Encrypted message]"
+            msg.content = decrypt_message(msg.content)
 
     return messages
 
