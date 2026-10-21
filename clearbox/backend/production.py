@@ -35,4 +35,5 @@ class ProductionSettings(Settings):
     # For newer Pydantic versions - override the parent class's model_config
     model_config = {
         "env_file": None,  # Don't load from .env in production
+        "extra": "ignore",
     }

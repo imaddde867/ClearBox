@@ -65,3 +65,62 @@ def test_reencrypt_messages_migrates_legacy_ciphertext(tmp_path):
     assert current.decrypt(stored.encode()) == b"historical message"
     with pytest.raises(InvalidToken):
         legacy.decrypt(stored.encode())
+
+
+def test_reencrypt_messages_fails_when_any_message_is_unreadable(tmp_path):
+    db_path = tmp_path / "clearbox.db"
+    engine = create_engine(f"sqlite:///{db_path}")
+    Base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine)()
+    legacy = Fernet(get_encryption_key(OLD_KEY.encode()))
+    stranger = Fernet(Fernet.generate_key())
+    session.add_all([
+        User(id=1, username="alice", email="alice@example.com", password="x"),
+        Message(
+            id=1,
+            sender_id=1,
+            content=legacy.encrypt(b"historical message").decode(),
+            encrypted=True,
+            delivered=True,
+        ),
+        Message(
+            id=2,
+            sender_id=1,
+            content=stranger.encrypt(b"unknown key").decode(),
+            encrypted=True,
+            delivered=True,
+        ),
+    ])
+    session.commit()
+    session.close()
+    engine.dispose()
+
+    env = os.environ.copy()
+    env.update({
+        "ENCRYPTION_KEY": NEW_KEY,
+        "LEGACY_ENCRYPTION_KEY": OLD_KEY,
+        "DATABASE_URL": f"sqlite:///{db_path}",
+        "PYTHONPATH": str(BACKEND_DIR),
+    })
+    result = subprocess.run(
+        [sys.executable, "migrations/reencrypt_messages.py", "--apply"],
+        capture_output=True,
+        text=True,
+        env=env,
+        cwd=BACKEND_DIR,
+    )
+
+    assert result.returncode != 0
+    assert "Re-encrypted 1 message(s); 1 could not be decrypted." in result.stdout
+
+    engine = create_engine(f"sqlite:///{db_path}")
+    session = sessionmaker(bind=engine)()
+    migrated = session.get(Message, 1).content
+    untouched = session.get(Message, 2).content
+    session.close()
+    engine.dispose()
+
+    assert Fernet(get_encryption_key(NEW_KEY.encode())).decrypt(
+        migrated.encode()
+    ) == b"historical message"
+    assert stranger.decrypt(untouched.encode()) == b"unknown key"

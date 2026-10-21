@@ -145,16 +145,24 @@ class TestEncryptionKeyConfiguration:
         assert result.returncode == 0, result.stderr
         assert result.stdout.strip().splitlines()[-1] == "env-file-key-0123456789abcdef"
 
-    def test_app_imports_with_documented_env_file(self):
-        with _env_file_with(
-            "ENCRYPTION_KEY=startup-test-key-0123456789\n"
-            "DATABASE_URL=sqlite://\n"
-            "MQTT_BROKER=127.0.0.1\n"
-            "MQTT_PORT=1\n"
-            "MQTT_USE_SSL=false\n"
-        ):
+    def test_app_imports_with_full_env_template(self):
+        template = (Path(BACKEND_DIR) / ".env.template").read_text()
+        contents = template.replace(
+            "\nENCRYPTION_KEY=\n",
+            "\nENCRYPTION_KEY=startup-test-key-0123456789\n",
+        ).replace(
+            "\n# LEGACY_ENCRYPTION_KEY=\n",
+            "\nLEGACY_ENCRYPTION_KEY=supersecretkey\n",
+        )
+        with _env_file_with(contents):
             result = _run_in_new_process(
-                "import app.main; print('APP IMPORT OK')"
+                "import app.main; print('APP IMPORT OK')",
+                extra_env={
+                    "DATABASE_URL": "sqlite://",
+                    "MQTT_BROKER": "127.0.0.1",
+                    "MQTT_PORT": "1",
+                    "MQTT_USE_SSL": "false",
+                },
             )
 
         assert result.returncode == 0, result.stderr

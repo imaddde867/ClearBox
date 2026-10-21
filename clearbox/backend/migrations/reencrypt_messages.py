@@ -62,6 +62,8 @@ def main():
 
     action = "Re-encrypted" if args.apply else "Would re-encrypt"
     print(f"{action} {rewritten} message(s); {unreadable} could not be decrypted.")
+    if unreadable:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

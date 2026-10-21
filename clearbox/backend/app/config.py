@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     # For compatibility with pydantic-settings v2
     model_config = {
         "env_file": ".env",
+        # Other modules read env vars absent from Settings (PORT, LEGACY_ENCRYPTION_KEY).
+        "extra": "ignore",
     }
     
     @property

@@ -63,6 +63,7 @@ This document outlines the steps to deploy ClearBox to a production environment 
 > set `LEGACY_ENCRYPTION_KEY` to the old key (decryption only), deploy, then run
 > `cd backend && python migrations/reencrypt_messages.py --apply`. Remove
 > `LEGACY_ENCRYPTION_KEY` and redeploy once the migration reports zero unreadable messages.
+> The migration exits nonzero while any message remains unreadable.
 
 ### Option 2: Manual Deployment
 
