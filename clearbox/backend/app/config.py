@@ -22,9 +22,9 @@ class Settings(BaseSettings):
     mqtt_password: str = os.getenv("MQTT_PASSWORD", "")
     mqtt_use_ssl: bool = os.getenv("MQTT_USE_SSL", "false").lower() == "true"
     
-    # Encryption
-    encryption_key: str = os.getenv("ENCRYPTION_KEY", "dev_encryption_key_change_in_production")
-    
+    # Encryption is read directly from the environment by app.encryption,
+    # which refuses to start without an explicitly configured key.
+
     # CORS - simplified to avoid parsing issues
     cors_origins_str: str = os.getenv("CORS_ORIGINS", "*")
     

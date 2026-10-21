@@ -180,7 +180,8 @@ MQTT_PORT=1883
 # MQTT_PASSWORD=your_mqtt_password  # Uncomment and set if needed
 
 # Encryption Configuration
-ENCRYPTION_KEY=generate_another_secure_random_string_here
+# Required: the app refuses to start if this is empty.
+ENCRYPTION_KEY=
 
 # Server Configuration
 PORT=8000

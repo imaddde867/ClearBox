@@ -4,14 +4,23 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import logging
+from dotenv import load_dotenv
 
-# Load encryption key from environment or generate one
-ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", "supersecretkey").encode()
+load_dotenv()
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Load encryption key from environment - required for security
+ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
+if not ENCRYPTION_KEY:
+    raise ValueError(
+        "ENCRYPTION_KEY environment variable is required. "
+        "Set a strong, unique secret key before starting the application."
+    )
+if len(ENCRYPTION_KEY) < 16:
+    raise ValueError(
+        "ENCRYPTION_KEY must be at least 16 characters long for security. "
+        "Use a strong, randomly generated secret."
+    )
+ENCRYPTION_KEY = ENCRYPTION_KEY.encode()
 
 def get_encryption_key():
     """
@@ -30,6 +39,9 @@ def get_encryption_key():
 
 # Initialize Fernet with our key
 fernet = Fernet(get_encryption_key())
+
+# Shown instead of ciphertext when a stored message cannot be decrypted
+UNDECRYPTABLE_PLACEHOLDER = "[Encrypted message - cannot be decrypted]"
 
 def encrypt_message(message):
     """

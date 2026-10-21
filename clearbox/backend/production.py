@@ -10,7 +10,6 @@ class ProductionSettings(Settings):
     mqtt_password: str = os.environ.get("MQTT_PASSWORD")
     mqtt_use_ssl: bool = os.environ.get("MQTT_USE_SSL", "true").lower() == "true"
     secret_key: str = os.environ.get("SECRET_KEY")
-    encryption_key: str = os.environ.get("ENCRYPTION_KEY")
     cors_origins_str: str = os.environ.get("CORS_ORIGINS", "https://clearbox.live")
     
     @property

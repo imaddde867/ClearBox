@@ -52,8 +52,12 @@ This document outlines the steps to deploy ClearBox to a production environment 
    - `MQTT_USERNAME`: `imadeddine200507`
    - `MQTT_PASSWORD`: `<your-password>`
    - `MQTT_USE_SSL`: `true`
-   - `ENCRYPTION_KEY`: (generate a strong random string)
+   - `ENCRYPTION_KEY`: (generate a strong random string, at least 16 characters)
    - `CORS_ORIGINS`: `https://clearbox.live`
+
+> **Encryption key:** keep `ENCRYPTION_KEY` stable across deployments. Messages are encrypted
+> with it, so changing it makes existing messages unreadable. They are returned to clients as a
+> placeholder, never as ciphertext or plaintext.
 
 ### Option 2: Manual Deployment
 
